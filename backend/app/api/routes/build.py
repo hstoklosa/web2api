@@ -1,5 +1,5 @@
 import httpx
-from app.services.scrape_service import fetch_html
+from app.services.scrape_service import get_html_content
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
 
@@ -18,7 +18,7 @@ class BuildSchemaResponse(BaseModel):
 @router.post("/")
 async def build_schema(request: BuildSchemaRequest):
     try:
-        html = await fetch_html(str(request.url))
+        html = await get_html_content(str(request.url))
     except httpx.HTTPError:
         raise HTTPException(status_code=500, detail="Failed to fetch the given URL")
 
