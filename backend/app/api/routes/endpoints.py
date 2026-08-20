@@ -9,16 +9,16 @@ from fastapi import APIRouter, HTTPException
 from openai import OpenAIError
 from pydantic import BaseModel, Field, HttpUrl
 
-router = APIRouter(prefix="/build", tags=["build"])
+router = APIRouter(prefix="/endpoints", tags=["endpoints"])
 
 
-class BuildSchemaRequest(BaseModel):
+class CreateEndpointRequest(BaseModel):
     url: HttpUrl
     description: str = Field(min_length=1)
 
 
-@router.post("/")
-async def build_schema(request: BuildSchemaRequest) -> Schema:
+@router.post("")
+async def create_endpoint(request: CreateEndpointRequest) -> Schema:
     try:
         html = await get_html_content(str(request.url))
         schema = await generate_schema(html, request.description)
