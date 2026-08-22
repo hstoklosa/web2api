@@ -1,4 +1,4 @@
-from app.deps import DbSession
+from app.deps import SessionDep
 from app.schemas.endpoint import CreateEndpointRequest, CreateEndpointResponse
 from app.services.endpoint_service import create_endpoint as create_endpoint_service
 from fastapi import APIRouter, status
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/endpoints", tags=["endpoints"])
 )
 async def create_endpoint(
     request: CreateEndpointRequest,
-    session: DbSession,
+    session: SessionDep,
 ) -> CreateEndpointResponse:
     endpoint = await create_endpoint_service(
         session=session,
