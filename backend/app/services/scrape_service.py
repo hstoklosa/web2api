@@ -51,11 +51,3 @@ async def fetch_html(url: str) -> str:
 async def fetch_clean_html(url: str) -> str:
     raw_html = await fetch_html(url)
     return clean_html(raw_html)
-
-
-def extract_text_with_selector(html: str, selector: str):
-    soup = BeautifulSoup(html, "html.parser")
-    # print(soup.prettify())
-    nested = soup.select(selector)
-    # print(nested)
-    return [i.text for i in nested]
