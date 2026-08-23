@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 
 from app.api.main import router
 from app.core.database import create_db_and_tables, engine
+from app.core.exceptions import NotFoundError
 
 
 @asynccontextmanager
@@ -20,6 +22,9 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(router)
 
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello, World!"}
+@app.exception_handler(NotFoundError)
+async def not_found_error_handler(request: Request, exc: NotFoundError) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"message": str(exc)},
+    )

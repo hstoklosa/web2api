@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import NotFoundError
 from app.models import Endpoint
 from app.services.schema_service import (
     generate_schema,
@@ -33,5 +34,5 @@ async def create_endpoint(
 async def get_endpoint_by_id(session: AsyncSession, id: UUID) -> Endpoint:
     endpoint = await session.get(Endpoint, id)
     if not endpoint:
-        raise Exception("Endpoint with this id not found")
+        raise NotFoundError("Endpoint not found")
     return endpoint
