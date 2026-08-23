@@ -13,3 +13,10 @@ class CreateEndpointResponse(BaseModel):
     url: str
     description: str
     schema_: dict
+
+
+class GetEndpointResponse(BaseModel):
+    id: UUID
+    url: str
+    description: str
+    schema_: dict
