@@ -32,7 +32,7 @@ async def create_endpoint(
         id=endpoint.id,
         url=endpoint.url,
         description=endpoint.description,
-        schema_=endpoint.json_schema,
+        schema_=endpoint.extraction_schema,
     )
 
 
@@ -50,5 +50,5 @@ async def get_endpoint(
         id=endpoint.id,
         url=endpoint.url,
         description=endpoint.description,
-        schema_=endpoint.json_schema,
+        schema_=endpoint.extraction_schema,
     )

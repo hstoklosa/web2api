@@ -14,4 +14,4 @@ class Endpoint(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     url: Mapped[str] = mapped_column(Text)
     description: Mapped[str] = mapped_column(Text)
-    json_schema: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    extraction_schema: Mapped[dict[str, Any]] = mapped_column(JSONB)
