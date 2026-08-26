@@ -25,3 +25,11 @@ class ExtractionSchema(BaseModel):
         None  # use to handle lists/repeated items relative to some item
     )
     fields: list[ExtractionSchemaField]
+
+    def to_json_schema(self) -> dict:
+        properties = {field.name: {"type": field.type} for field in self.fields}
+        object_schema = {"type": "object", "properties": properties}
+
+        if self.item_selector is not None:
+            return {"type": "array", "items": object_schema}
+        return object_schema

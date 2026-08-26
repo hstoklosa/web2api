@@ -30,12 +30,13 @@ async def create_endpoint(
         url=str(request.url),
         description=request.description,
     )
+    schema = ExtractionSchema.model_validate(endpoint.extraction_schema)
 
     return CreateEndpointResponse(
         id=endpoint.id,
         url=endpoint.url,
         description=endpoint.description,
-        schema_=endpoint.extraction_schema,
+        schema_=schema.to_json_schema(),
     )
 
 
@@ -49,11 +50,13 @@ async def get_endpoint(
     session: SessionDep,
 ) -> GetEndpointResponse:
     endpoint = await get_endpoint_by_id(session, id)
+    schema = ExtractionSchema.model_validate(endpoint.extraction_schema)
+
     return GetEndpointResponse(
         id=endpoint.id,
         url=endpoint.url,
         description=endpoint.description,
-        schema_=endpoint.extraction_schema,
+        schema_=schema.to_json_schema(),
     )
 
 
