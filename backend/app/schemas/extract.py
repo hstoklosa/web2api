@@ -17,6 +17,7 @@ class ExtractionSchemaField(BaseModel):
     selector: str
     relative_to: Literal["item", "next_sibling"] = "item"
     source: TextSource | AttributeSource = TextSource()
+    type: Literal["string", "integer", "number", "boolean"] = "string"
 
 
 class ExtractionSchema(BaseModel):

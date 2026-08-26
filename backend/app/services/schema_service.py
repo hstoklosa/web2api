@@ -28,6 +28,13 @@ SELECTORS
 NAMING
 - Field names: snake_case, descriptive, derived from the data's meaning rather than the site's markup (`price_usd`, not `span_2`).
 
+TYPES
+- Each field has a `type`: "string" (default), "integer", "number", or "boolean".
+- Use "integer" for whole-number counts or IDs (`review_count`, `stock_quantity`).
+- Use "number" for values with decimals, including prices and percentages (`price_usd`, `rating`), even if the source text includes currency symbols, commas, or a "%" sign.
+- Use "boolean" for two-state values (`in_stock`, `is_available`), even if the source text is a word or phrase like "In Stock" / "Out of Stock" rather than "true"/"false".
+- Use "string" for everything else (names, titles, descriptions, URLs, dates, free text).
+
 OUTPUT SHAPE
 Prefer short, stable selectors based on IDs, semantic classes, and attributes.
 Avoid nth-child and deeply nested selector chains.
