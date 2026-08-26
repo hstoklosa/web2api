@@ -1,12 +1,11 @@
-from typing import Literal
-
 from openai import AsyncOpenAI
-from pydantic import BaseModel
 
 from app.core.config import settings
+from app.core.exceptions import SchemaGenerationError
+from app.schemas.extract import ExtractionSchema
 
 MAX_HTML_CHARS = 80_000
-DEFAULT_MODEL = "deepseek/deepseek-v4-flash"
+DEFAULT_MODEL = "openrouter/free"
 
 
 openai_client: AsyncOpenAI = AsyncOpenAI(
@@ -14,37 +13,11 @@ openai_client: AsyncOpenAI = AsyncOpenAI(
 )
 
 
-class TextSource(BaseModel):
-    kind: Literal["text"] = "text"
-
-
-class AttributeSource(BaseModel):
-    kind: Literal["attribute"] = "attribute"
-    name: str
-
-
-class ExtractionSchemaField(BaseModel):
-    name: str
-    type: Literal["string", "number", "boolean", "url"]
-    selector: str
-    relative_to: Literal["item", "next_sibling"] = "item"
-    source: TextSource | AttributeSource = TextSource()
-
-
-class ExtractionSchema(BaseModel):
-    item_selector: str | None = None  # use to handle lists
-    fields: list[ExtractionSchemaField]
-
-
-class ExtractionSchemaException(Exception):
-    pass
-
-
 async def generate_schema(html: str, description: str) -> ExtractionSchema:
     system_prompt = """
 You generate a data-extraction schema from HTML and a user's description. 
 
-You are given (1) the pro-processed HTML of a single page and (2) a plain-English description of the data requested by the user. Produce an extraction plan: a typed schema + CSS selectors that will be used to reextract that data from this page on every future request, without another model call.
+You are given (1) the pro-processed HTML of a single page and (2) a plain-English description of the data requested by the user. Produce an extraction plan: a schema + CSS selectors that will be used to reextract that data from this page on every future request, without another model call.
 
 SELECTORS
 - Every selector must match content you can actually see in the provided HTML. Never guess at markup that isn't there. If a requested field has no corresponding element, omit it rather than inventing a selector.
@@ -88,10 +61,11 @@ HTML content:
             {"role": "user", "content": user_prompt.strip()},
         ],
         text_format=ExtractionSchema,
+        extra_body={"provider": {"require_parameters": True}},
     )
     schema = response.output_parsed
 
     if schema is None:
-        raise ExtractionSchemaException("Model returned no schema")
+        raise SchemaGenerationError("Model returned no schema")
 
     return schema

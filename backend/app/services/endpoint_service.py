@@ -21,7 +21,7 @@ async def create_endpoint(
     endpoint = Endpoint(
         url=url,
         description=description,
-        json_schema=schema.model_dump(mode="json"),
+        extraction_schema=schema.model_dump(mode="json"),
     )
 
     session.add(endpoint)
