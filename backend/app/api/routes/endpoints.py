@@ -6,8 +6,11 @@ from app.schemas.endpoint import (
     CreateEndpointResponse,
     GetEndpointResponse,
 )
+from app.schemas.extract import ExtractionSchema
 from app.services.endpoint_service import create_endpoint as create_endpoint_service
 from app.services.endpoint_service import get_endpoint_by_id
+from app.services.extraction_service import extract_data
+from app.services.scrape_service import fetch_clean_html
 from fastapi import APIRouter, status
 
 router = APIRouter(prefix="/endpoints", tags=["endpoints"])
@@ -52,3 +55,19 @@ async def get_endpoint(
         description=endpoint.description,
         schema_=endpoint.extraction_schema,
     )
+
+
+@router.get(
+    "/{id}/data",
+    status_code=status.HTTP_200_OK,
+)
+async def get_endpoint_data(
+    id: UUID,
+    session: SessionDep,
+) -> dict[str, object] | list[dict[str, object]]:
+    endpoint = await get_endpoint_by_id(session, id)
+    html = await fetch_clean_html(endpoint.url)
+    data = extract_data(
+        html, ExtractionSchema.model_validate(endpoint.extraction_schema)
+    )
+    return data
