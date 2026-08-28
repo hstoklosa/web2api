@@ -8,6 +8,7 @@ from app.services.schema_service import (
     generate_schema,
 )
 from app.services.scrape_service import fetch_clean_html
+from app.services.validation_service import validate_schema
 
 
 async def create_endpoint(
@@ -17,6 +18,8 @@ async def create_endpoint(
 ) -> Endpoint:
     html = await fetch_clean_html(url)
     schema = await generate_schema(html, description)
+
+    validate_schema(html, schema)
 
     endpoint = Endpoint(
         url=url,

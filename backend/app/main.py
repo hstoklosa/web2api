@@ -5,7 +5,11 @@ from fastapi.responses import JSONResponse
 
 from app.api.main import router
 from app.core.database import create_db_and_tables, engine
-from app.core.exceptions import NotFoundError, SchemaGenerationError
+from app.core.exceptions import (
+    NotFoundError,
+    SchemaGenerationError,
+    SchemaValidationError,
+)
 
 
 @asynccontextmanager
@@ -33,6 +37,16 @@ async def not_found_error_handler(request: Request, exc: NotFoundError) -> JSONR
 @app.exception_handler(SchemaGenerationError)
 async def schema_generation_error_handler(
     request: Request, exc: SchemaGenerationError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        content={"message": str(exc)},
+    )
+
+
+@app.exception_handler(SchemaValidationError)
+async def schema_validation_error_handler(
+    request: Request, exc: SchemaValidationError
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,

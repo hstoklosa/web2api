@@ -1,8 +1,9 @@
 import re
 
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
-from app.schemas.extract import ExtractionSchema
+from app.schemas.extract import ExtractionSchema, ExtractionSchemaField
 
 _TRUE_TEXTS = {"true", "yes", "y", "in stock", "available", "checked", "1", "on"}
 _FALSE_TEXTS = {"false", "no", "n", "out of stock", "unavailable", "unchecked", "0", "off"}
@@ -39,6 +40,15 @@ def _coerce(value: str | None, type_: str) -> object:
     return value
 
 
+def resolve_element(item: Tag, field: ExtractionSchemaField) -> Tag | None:
+    if field.relative_to == "next_sibling":
+        context = item.find_next_sibling()
+    else:
+        context = item
+
+    return context.select_one(field.selector) if context is not None else None
+
+
 def extract_data(
     html: str, schema: ExtractionSchema
 ) -> dict[str, object] | list[dict[str, object]]:
@@ -48,15 +58,9 @@ def extract_data(
 
     for item in items:
         row = {}
-        for field in schema.fields:
-            if field.relative_to == "next_sibling":
-                context = item.find_next_sibling()
-            else:
-                context = item
 
-            element = (
-                context.select_one(field.selector) if context is not None else None
-            )
+        for field in schema.fields:
+            element = resolve_element(item, field)
 
             if field.source.kind == "text":
                 text_content = (

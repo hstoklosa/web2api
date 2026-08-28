@@ -8,3 +8,7 @@ class NotFoundError(AppError):
 
 class SchemaGenerationError(AppError):
     pass
+
+
+class SchemaValidationError(AppError):
+    pass
