@@ -13,14 +13,14 @@ from app.core.exceptions import (
 async def not_found_error_handler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        content={"message": str(exc)},
+        content={"detail": str(exc)},
     )
 
 
 async def conflict_error_handler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
-        content={"message": str(exc)},
+        content={"detail": str(exc)},
     )
 
 
@@ -29,7 +29,7 @@ async def authentication_error_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"message": str(exc)},
+        content={"detail": str(exc)},
         headers={"WWW-Authenticate": "Bearer"},
     )
 
@@ -39,7 +39,7 @@ async def schema_generation_error_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,
-        content={"message": str(exc)},
+        content={"detail": str(exc)},
     )
 
 
@@ -48,7 +48,7 @@ async def schema_validation_error_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,
-        content={"message": str(exc)},
+        content={"detail": str(exc)},
     )
 
 
