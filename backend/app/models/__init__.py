@@ -1,4 +1,5 @@
 from app.models.base import Base
 from app.models.endpoint import Endpoint
+from app.models.user import User
 
-__all__ = ["Base", "Endpoint"]
+__all__ = ["Base", "Endpoint", "User"]

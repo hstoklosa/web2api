@@ -6,6 +6,14 @@ class NotFoundError(AppError):
     pass
 
 
+class ConflictError(AppError):
+    pass
+
+
+class AuthenticationError(AppError):
+    pass
+
+
 class SchemaGenerationError(AppError):
     pass
 
