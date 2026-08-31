@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.deps import SessionDep
+from app.deps import CurrentUserDep, SessionDep
 from app.schemas.endpoint import (
     CreateEndpointRequest,
     CreateEndpointResponse,
@@ -24,9 +24,11 @@ router = APIRouter(prefix="/endpoints", tags=["endpoints"])
 async def create_endpoint(
     request: CreateEndpointRequest,
     session: SessionDep,
+    user: CurrentUserDep,
 ) -> CreateEndpointResponse:
     endpoint = await create_endpoint_service(
         session=session,
+        user_id=user.id,
         url=str(request.url),
         description=request.description,
     )
@@ -48,8 +50,9 @@ async def create_endpoint(
 async def get_endpoint(
     id: UUID,
     session: SessionDep,
+    user: CurrentUserDep,
 ) -> GetEndpointResponse:
-    endpoint = await get_endpoint_by_id(session, id)
+    endpoint = await get_endpoint_by_id(session, id, user.id)
     schema = ExtractionSchema.model_validate(endpoint.extraction_schema)
 
     return GetEndpointResponse(
@@ -67,8 +70,9 @@ async def get_endpoint(
 async def get_endpoint_data(
     id: UUID,
     session: SessionDep,
+    user: CurrentUserDep,
 ) -> dict[str, object] | list[dict[str, object]]:
-    endpoint = await get_endpoint_by_id(session, id)
+    endpoint = await get_endpoint_by_id(session, id, user.id)
     html = await fetch_clean_html(endpoint.url)
     data = extract_data(
         html, ExtractionSchema.model_validate(endpoint.extraction_schema)

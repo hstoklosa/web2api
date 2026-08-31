@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
@@ -13,6 +14,7 @@ from app.services.validation_service import validate_schema
 
 async def create_endpoint(
     session: AsyncSession,
+    user_id: int,
     url: str,
     description: str,
 ) -> Endpoint:
@@ -22,6 +24,7 @@ async def create_endpoint(
     validate_schema(html, schema)
 
     endpoint = Endpoint(
+        user_id=user_id,
         url=url,
         description=description,
         extraction_schema=schema.model_dump(mode="json"),
@@ -34,8 +37,14 @@ async def create_endpoint(
     return endpoint
 
 
-async def get_endpoint_by_id(session: AsyncSession, id: UUID) -> Endpoint:
-    endpoint = await session.get(Endpoint, id)
+async def get_endpoint_by_id(
+    session: AsyncSession,
+    id: UUID,
+    user_id: int,
+) -> Endpoint:
+    endpoint = await session.scalar(
+        select(Endpoint).where(Endpoint.id == id, Endpoint.user_id == user_id)
+    )
     if not endpoint:
         raise NotFoundError("Endpoint not found")
     return endpoint
