@@ -17,7 +17,7 @@ router = APIRouter(prefix="/endpoints", tags=["endpoints"])
 
 
 @router.post(
-    "/",
+    "",
     response_model=CreateEndpointResponse,
     status_code=status.HTTP_201_CREATED,
 )
