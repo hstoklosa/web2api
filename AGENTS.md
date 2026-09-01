@@ -14,3 +14,10 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Keep route handlers focused on HTTP concerns and place request and response models in `app/schemas`.
 - Put business logic and infrastructure error translation in `app/services`.
 - Persist endpoints with a UUID, URL, description, and PostgreSQL JSONB extraction schema.
+
+## Frontend Conventions
+
+- Declare routes in `src/app/router.tsx` using React Router data mode (`createBrowserRouter` + `RouterProvider`), with route components in `src/app/routes`.
+- Nest pages under `RootLayout` in `src/components/layout/root-layout.tsx`, which renders shared chrome around an `Outlet`, and keep other layouts in `src/components/layout`.
+- Import route components statically by default.
+- Reach for `lazy` only when a route pulls in a heavy dependency the landing page should not carry, since code splitting costs an extra round trip before the route renders.
