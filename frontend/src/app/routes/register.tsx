@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Container,
   Paper,
@@ -8,38 +9,59 @@ import {
   Title,
 } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
-import * as z from "zod";
 
-const registerSchema = z.object({
-  email: z.email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import {
+  registerInputSchema,
+  useRegister,
+  type RegisterInput,
+} from "@/features/auth/api/register";
+import { getApiErrorMessage } from "@/lib/axios";
 
 const RegisterRoute = () => {
-  const form = useForm<RegisterFormValues>({
+  const register = useRegister();
+
+  const form = useForm<RegisterInput>({
     mode: "uncontrolled",
     initialValues: {
       email: "",
       password: "",
     },
-    validate: schemaResolver(registerSchema, { sync: true }),
+    validate: schemaResolver(registerInputSchema, { sync: true }),
   });
 
-  const handleSubmit = (values: RegisterFormValues) => {
-    console.log(values);
+  const handleSubmit = (values: RegisterInput) => {
+    register.mutate(values);
   };
 
   return (
-    <Container size={420} py="xl">
-      <Title order={2} ta="center">
+    <Container
+      size={420}
+      py="xl"
+    >
+      <Title
+        order={2}
+        ta="center"
+      >
         Create an account
       </Title>
 
-      <Paper withBorder radius="md" p="lg" mt="lg">
+      <Paper
+        withBorder
+        radius="md"
+        p="lg"
+        mt="lg"
+      >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
+            {register.isError && (
+              <Alert
+                color="red"
+                variant="light"
+              >
+                {getApiErrorMessage(register.error)}
+              </Alert>
+            )}
+
             <TextInput
               label="Email"
               placeholder="you@example.com"
@@ -53,7 +75,13 @@ const RegisterRoute = () => {
               key={form.key("password")}
               {...form.getInputProps("password")}
             />
-            <Button type="submit" fullWidth mt="sm">
+            <Button
+              type="submit"
+              color="purple"
+              fullWidth
+              mt="sm"
+              loading={register.isPending}
+            >
               Register
             </Button>
           </Stack>
