@@ -6,6 +6,7 @@ import RootLayout from "@/components/layout/root-layout";
 import { requireAuth } from "./middleware/require-auth";
 import DashboardRoute from "./routes/dashboard";
 import HomeRoute from "./routes/home";
+import LoginRoute from "./routes/login";
 import RegisterRoute from "./routes/register";
 
 const router = createBrowserRouter([
@@ -14,6 +15,7 @@ const router = createBrowserRouter([
     Component: RootLayout,
     children: [
       { index: true, Component: HomeRoute },
+      { path: "login", Component: LoginRoute },
       { path: "register", Component: RegisterRoute },
       {
         Component: AppLayout,

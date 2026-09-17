@@ -12,53 +12,52 @@ import {
 } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 
 import { userQueryKey } from "@/features/auth/api/get-user";
-import { useLogin } from "@/features/auth/api/login";
 import {
-  registerInputSchema,
-  useRegister,
-  type RegisterInput,
-} from "@/features/auth/api/register";
+  loginInputSchema,
+  useLogin,
+  type LoginInput,
+} from "@/features/auth/api/login";
 import { setToken } from "@/lib/auth-token";
 import { getApiErrorMessage } from "@/lib/axios";
 
-const RegisterRoute = () => {
+// Only follow same-origin paths, so the param cannot be used as an open
+// redirect ("//evil.com" and "/\evil.com" both resolve to another host).
+const getRedirectTarget = (value: string | null): string => {
+  if (value !== null && /^\/(?![/\\])/.test(value)) {
+    return value;
+  }
+  return "/dashboard";
+};
+
+const LoginRoute = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
 
-  const login = useLogin();
-
-  // Registration does not issue a token, so log in with the same credentials
-  // once the account exists.
-  const register = useRegister({
-    onSuccess: (user, input) =>
-      login.mutate(input, {
-        onSuccess: (token) => {
-          setToken(token.access_token);
-          // Seed the current-user query with the user we already have so the
-          // dashboard renders without waiting on /auth/me.
-          queryClient.setQueryData(userQueryKey, user);
-          navigate("/dashboard");
-        },
-      }),
+  const login = useLogin({
+    onSuccess: (token) => {
+      setToken(token.access_token);
+      // Drop any previously cached user so the auth middleware loads the
+      // account that just signed in instead of trusting stale data.
+      queryClient.removeQueries({ queryKey: userQueryKey });
+      navigate(getRedirectTarget(searchParams.get("redirect")));
+    },
   });
 
-  const isPending = register.isPending || login.isPending;
-  const error = register.error ?? login.error;
-
-  const form = useForm<RegisterInput>({
+  const form = useForm<LoginInput>({
     mode: "uncontrolled",
     initialValues: {
       email: "",
       password: "",
     },
-    validate: schemaResolver(registerInputSchema, { sync: true }),
+    validate: schemaResolver(loginInputSchema, { sync: true }),
   });
 
-  const handleSubmit = (values: RegisterInput) => {
-    register.mutate(values);
+  const handleSubmit = (values: LoginInput) => {
+    login.mutate(values);
   };
 
   return (
@@ -70,7 +69,7 @@ const RegisterRoute = () => {
         order={2}
         ta="center"
       >
-        Create an account
+        Welcome back
       </Title>
 
       <Paper
@@ -81,12 +80,12 @@ const RegisterRoute = () => {
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
-            {error && (
+            {login.error && (
               <Alert
                 color="red"
                 variant="light"
               >
-                {getApiErrorMessage(error)}
+                {getApiErrorMessage(login.error)}
               </Alert>
             )}
 
@@ -108,9 +107,9 @@ const RegisterRoute = () => {
               color="purple"
               fullWidth
               mt="sm"
-              loading={isPending}
+              loading={login.isPending}
             >
-              Register
+              Log in
             </Button>
           </Stack>
         </form>
@@ -121,17 +120,17 @@ const RegisterRoute = () => {
         size="sm"
         mt="md"
       >
-        Already have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Anchor
           component={Link}
-          to="/login"
+          to="/register"
           size="sm"
         >
-          Log in
+          Register
         </Anchor>
       </Text>
     </Container>
   );
 };
 
-export default RegisterRoute;
+export default LoginRoute;
