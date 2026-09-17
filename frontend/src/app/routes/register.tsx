@@ -9,16 +9,42 @@ import {
   Title,
 } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 
+import { userQueryKey } from "@/features/auth/api/get-user";
+import { useLogin } from "@/features/auth/api/login";
 import {
   registerInputSchema,
   useRegister,
   type RegisterInput,
 } from "@/features/auth/api/register";
+import { setToken } from "@/lib/auth-token";
 import { getApiErrorMessage } from "@/lib/axios";
 
 const RegisterRoute = () => {
-  const register = useRegister();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const login = useLogin();
+
+  // Registration does not issue a token, so log in with the same credentials
+  // once the account exists.
+  const register = useRegister({
+    onSuccess: (user, input) =>
+      login.mutate(input, {
+        onSuccess: (token) => {
+          setToken(token.access_token);
+          // Seed the current-user query with the user we already have so the
+          // dashboard renders without waiting on /auth/me.
+          queryClient.setQueryData(userQueryKey, user);
+          navigate("/dashboard");
+        },
+      }),
+  });
+
+  const isPending = register.isPending || login.isPending;
+  const error = register.error ?? login.error;
 
   const form = useForm<RegisterInput>({
     mode: "uncontrolled",
@@ -53,12 +79,12 @@ const RegisterRoute = () => {
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
-            {register.isError && (
+            {error && (
               <Alert
                 color="red"
                 variant="light"
               >
-                {getApiErrorMessage(register.error)}
+                {getApiErrorMessage(error)}
               </Alert>
             )}
 
@@ -80,7 +106,7 @@ const RegisterRoute = () => {
               color="purple"
               fullWidth
               mt="sm"
-              loading={register.isPending}
+              loading={isPending}
             >
               Register
             </Button>

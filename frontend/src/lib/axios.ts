@@ -1,10 +1,29 @@
 import axios, { isAxiosError } from "axios";
 
+import { clearToken, getToken } from "./auth-token";
+
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? "/v1",
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+apiClient.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(undefined, (error: unknown) => {
+  // The token was rejected (expired, invalid, or the user no longer exists),
+  // so stop sending it. The error still propagates to the caller.
+  if (isAxiosError(error) && error.response?.status === 401) {
+    clearToken();
+  }
+  return Promise.reject(error);
 });
 
 export const getApiErrorMessage = (
