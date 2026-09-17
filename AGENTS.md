@@ -14,10 +14,22 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Keep route handlers focused on HTTP concerns and place request and response models in `app/schemas`.
 - Put business logic and infrastructure error translation in `app/services`.
 - Persist endpoints with a UUID, URL, description, and PostgreSQL JSONB extraction schema.
+- The API registers no CORS middleware, since the Vite dev proxy keeps browser requests same-origin, so a split-origin deployment has to add `CORSMiddleware`.
 
 ## Frontend Conventions
 
-- Declare routes in `src/app/router.tsx` using React Router data mode (`createBrowserRouter` + `RouterProvider`), with route components in `src/app/routes`.
-- Nest pages under `RootLayout` in `src/components/layout/root-layout.tsx`, which renders shared chrome around an `Outlet`, and keep other layouts in `src/components/layout`.
-- Import route components statically by default.
-- Reach for `lazy` only when a route pulls in a heavy dependency the landing page should not carry, since code splitting costs an extra round trip before the route renders.
+- The frontend lives in `frontend/` and runs on React 19, Vite, Mantine, React Router data mode, TanStack Query, axios, and zod.
+- Follow bulletproof-react layout: app setup in `src/app`, feature code in `src/features/<feature>/{api,components}`, shared UI in `src/components`, shared clients in `src/lib`.
+- Import across those directories with the `@/*` alias, and keep relative paths for siblings within one directory.
+- Keep imports unidirectional: features may import from `src/lib` and `src/components`, but never from `src/app` or another feature.
+- Declare routes in `src/app/router.tsx`, keeping route components in `src/app/routes` nested under `RootLayout` from `src/components/layout`.
+- Import route components statically, and reach for `lazy` only when a route pulls in a heavy dependency, since code splitting costs a round trip before that route renders.
+- Register providers in `src/app/provider.tsx`.
+- Call the API through `apiClient` in `src/lib/axios.ts`, whose `/v1` base URL `vite.config.ts` proxies to the backend in development.
+- Pair each endpoint with its zod schemas and TanStack Query hook in one feature module, parsing the response rather than casting it.
+- Share one zod schema per payload between form validation, via `schemaResolver` from `@mantine/form`, and the request it feeds.
+
+## Commands
+
+- Backend, from `backend/`: `docker compose up -d postgres` once, then `uv run fastapi dev`.
+- Frontend, from `frontend/`: `npm run dev`, `npm run build`, `npm run lint`.
