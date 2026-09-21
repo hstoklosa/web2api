@@ -3,6 +3,7 @@ import {
   Anchor,
   Button,
   Container,
+  Flex,
   Paper,
   PasswordInput,
   Stack,
@@ -62,75 +63,104 @@ const RegisterRoute = () => {
   };
 
   return (
-    <Container
-      size={420}
-      py="xl"
+    <Flex
+      mih="100dvh"
+      direction="column"
+      align="center"
+      justify="center"
+      px="md"
     >
-      <Title
-        order={2}
-        ta="center"
+      <Container
+        size={420}
+        w="100%"
+        py="xl"
       >
-        Create an account
-      </Title>
-
-      <Paper
-        withBorder
-        radius="md"
-        p="lg"
-        mt="lg"
-      >
-        <form onSubmit={form.onSubmit(handleSubmit)}>
-          <Stack>
-            {error && (
-              <Alert
-                color="red"
-                variant="light"
-              >
-                {getApiErrorMessage(error)}
-              </Alert>
-            )}
-
-            <TextInput
-              label="Email"
-              placeholder="you@example.com"
-              type="email"
-              key={form.key("email")}
-              {...form.getInputProps("email")}
-            />
-            <PasswordInput
-              label="Password"
-              placeholder="Your password"
-              key={form.key("password")}
-              {...form.getInputProps("password")}
-            />
-            <Button
-              type="submit"
-              color="purple"
-              fullWidth
-              mt="sm"
-              loading={isPending}
-            >
-              Register
-            </Button>
-          </Stack>
-        </form>
-      </Paper>
-
-      <Text
-        ta="center"
-        size="sm"
-        mt="md"
-      >
-        Already have an account?{" "}
-        <Anchor
-          component={Link}
-          to="/login"
-          size="sm"
+        <Stack
+          align="center"
+          gap={2}
+          mb="lg"
         >
-          Log in
-        </Anchor>
-      </Text>
-    </Container>
+          <Anchor
+            component={Link}
+            to="/"
+            underline="never"
+            c="black"
+            fw={700}
+            size="lg"
+          >
+            web2api
+          </Anchor>
+          <Title
+            order={2}
+            ta="center"
+          >
+            Create an account
+          </Title>
+        </Stack>
+
+        <Paper
+          withBorder
+          radius="md"
+          p="lg"
+        >
+          <form onSubmit={form.onSubmit(handleSubmit)}>
+            <Stack>
+              {error && (
+                <Alert
+                  color="red"
+                  variant="light"
+                >
+                  {getApiErrorMessage(error)}
+                </Alert>
+              )}
+
+              <TextInput
+                label="Email"
+                placeholder="you@example.com"
+                type="email"
+                key={form.key("email")}
+                {...form.getInputProps("email")}
+              />
+              <PasswordInput
+                label="Password"
+                placeholder="Your password"
+                key={form.key("password")}
+                {...form.getInputProps("password")}
+              />
+              <Button
+                type="submit"
+                color="dark"
+                radius="sm"
+                tt="uppercase"
+                fz="xs"
+                lts="0.05em"
+                fullWidth
+                mt="sm"
+                loading={isPending}
+              >
+                Register
+              </Button>
+            </Stack>
+          </form>
+        </Paper>
+
+        <Text
+          ta="center"
+          size="sm"
+          mt="md"
+        >
+          Already have an account?{" "}
+          <Anchor
+            component={Link}
+            to="/login"
+            size="sm"
+            c="black"
+          >
+            Log in
+          </Anchor>
+        </Text>
+      </Container>
+    </Flex>
   );
 };
 

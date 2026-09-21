@@ -6,4 +6,5 @@ const fontFamily =
 export const theme = createTheme({
   fontFamily,
   fontFamilyMonospace: fontFamily,
+  primaryColor: "dark",
 });
