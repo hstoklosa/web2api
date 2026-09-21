@@ -5,10 +5,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 import { queryClient } from "@/lib/react-query";
 
+import { theme } from "./theme";
+
 const AppProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <MantineProvider>{children}</MantineProvider>
+      <MantineProvider theme={theme}>{children}</MantineProvider>
     </QueryClientProvider>
   );
 };
