@@ -25,6 +25,7 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Declare routes in `src/app/router.tsx`, keeping route components in `src/app/routes` nested under `RootLayout` from `src/components/layout`.
 - Import route components statically, and reach for `lazy` only when a route pulls in a heavy dependency, since code splitting costs a round trip before that route renders.
 - Register providers in `src/app/provider.tsx`.
+- Configure the Mantine theme (fonts, colors, etc.) in `src/app/theme.ts` and pass it to `MantineProvider` in `src/app/provider.tsx`.
 - Call the API through `apiClient` in `src/lib/axios.ts`, whose `/v1` base URL `vite.config.ts` proxies to the backend in development.
 - Pair each endpoint with its zod schemas and TanStack Query hook in one feature module, parsing the response rather than casting it.
 - Share one zod schema per payload between form validation, via `schemaResolver` from `@mantine/form`, and the request it feeds.
