@@ -3,22 +3,14 @@ import * as z from "zod";
 
 import { apiClient } from "@/lib/axios";
 
+import { endpointSchema, type Endpoint } from "./endpoint";
+
 export const createEndpointInputSchema = z.object({
   url: z.url("Enter a valid URL"),
   description: z.string().min(1, "Describe the data you want to extract"),
 });
 
 export type CreateEndpointInput = z.infer<typeof createEndpointInputSchema>;
-
-export const endpointSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  url: z.string(),
-  description: z.string(),
-  schema: z.record(z.string(), z.unknown()),
-});
-
-export type Endpoint = z.infer<typeof endpointSchema>;
 
 export const createEndpoint = async (
   input: CreateEndpointInput,

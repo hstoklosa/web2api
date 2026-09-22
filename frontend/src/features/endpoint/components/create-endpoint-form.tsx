@@ -5,8 +5,8 @@ import {
   createEndpointInputSchema,
   useCreateEndpoint,
   type CreateEndpointInput,
-  type Endpoint,
 } from "@/features/endpoint/api/create-endpoint";
+import type { Endpoint } from "@/features/endpoint/api/endpoint";
 import { getApiErrorMessage } from "@/lib/axios";
 
 type CreateEndpointFormProps = {
