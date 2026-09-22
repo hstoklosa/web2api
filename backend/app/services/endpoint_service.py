@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
@@ -49,3 +50,13 @@ async def get_endpoint_by_id(
     if not endpoint:
         raise NotFoundError("Endpoint not found")
     return endpoint
+
+
+async def get_endpoints_by_user(
+    session: AsyncSession,
+    user_id: int,
+) -> Sequence[Endpoint]:
+    result = await session.scalars(
+        select(Endpoint).where(Endpoint.user_id == user_id).order_by(Endpoint.name)
+    )
+    return result.all()
