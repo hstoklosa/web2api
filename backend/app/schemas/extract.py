@@ -33,3 +33,11 @@ class ExtractionSchema(BaseModel):
         if self.item_selector is not None:
             return {"type": "array", "items": object_schema}
         return object_schema
+
+
+class EndpointPlan(BaseModel):
+    # extraction comes first so the model commits to the fields it can actually
+    # see before it names and describes them
+    extraction: ExtractionSchema
+    name: str
+    description: str

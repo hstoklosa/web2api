@@ -10,6 +10,7 @@ class CreateEndpointRequest(BaseModel):
 
 class CreateEndpointResponse(BaseModel):
     id: UUID
+    name: str
     url: str
     description: str
     schema_: dict = Field(serialization_alias="schema")
@@ -17,6 +18,7 @@ class CreateEndpointResponse(BaseModel):
 
 class GetEndpointResponse(BaseModel):
     id: UUID
+    name: str
     url: str
     description: str
     schema_: dict = Field(serialization_alias="schema")

@@ -15,6 +15,7 @@ class Endpoint(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    name: Mapped[str] = mapped_column(Text)
     url: Mapped[str] = mapped_column(Text)
     description: Mapped[str] = mapped_column(Text)
     extraction_schema: Mapped[dict[str, Any]] = mapped_column(JSONB)

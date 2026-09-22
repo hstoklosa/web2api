@@ -2,7 +2,7 @@ from openai import AsyncOpenAI
 
 from app.core.config import settings
 from app.core.exceptions import SchemaGenerationError
-from app.schemas.extract import ExtractionSchema
+from app.schemas.extract import EndpointPlan
 
 MAX_HTML_CHARS = 80_000
 DEFAULT_MODEL = "openrouter/free"
@@ -13,11 +13,11 @@ openai_client: AsyncOpenAI = AsyncOpenAI(
 )
 
 
-async def generate_schema(html: str, description: str) -> ExtractionSchema:
+async def generate_endpoint_plan(html: str, prompt: str) -> EndpointPlan:
     system_prompt = """
-You generate a data-extraction schema from HTML and a user's description. 
+You generate a data-extraction schema from HTML and a user's description.
 
-You are given (1) the pro-processed HTML of a single page and (2) a plain-English description of the data requested by the user. Produce an extraction plan: a schema + CSS selectors that will be used to reextract that data from this page on every future request, without another model call.
+You are given (1) the pre-processed HTML of a single page and (2) a plain-English description of the data requested by the user. Produce an extraction plan: a schema + CSS selectors that will be used to reextract that data from this page on every future request, without another model call.
 
 SELECTORS
 - Every selector must match content you can actually see in the provided HTML. Never guess at markup that isn't there. If a requested field has no corresponding element, omit it rather than inventing a selector.
@@ -34,6 +34,11 @@ TYPES
 - Use "number" for values with decimals, including prices and percentages (`price_usd`, `rating`), even if the source text includes currency symbols, commas, or a "%" sign.
 - Use "boolean" for two-state values (`in_stock`, `is_available`), even if the source text is a word or phrase like "In Stock" / "Out of Stock" rather than "true"/"false".
 - Use "string" for everything else (names, titles, descriptions, URLs, dates, free text).
+
+NAME AND DESCRIPTION
+Along with the extraction plan, produce a `name` and a `description` for the endpoint.
+- `name`: snake_case, concise (2-4 words), descriptive of the data returned, derived from the page's subject and the fields you extracted (`hn_top_stories`, `product_listings`). No URL, no site chrome, no generic names like `data` or `endpoint`.
+- `description`: one or two sentences describing what this endpoint returns. State whether it returns a single object or a list of records, name the fields it produces, and say what page or section of the site they come from. Describe the data you actually extracted, not the user's request.
 
 OUTPUT SHAPE
 Prefer short, stable selectors based on IDs, semantic classes, and attributes.
@@ -55,7 +60,7 @@ The HTML may have been truncated or stripped of scripts, styles and non-content 
 
     user_prompt = f"""
 User's description:
-{description}
+{prompt}
 
 HTML content:
 {html[:MAX_HTML_CHARS]}
@@ -67,12 +72,12 @@ HTML content:
             {"role": "system", "content": system_prompt.strip()},
             {"role": "user", "content": user_prompt.strip()},
         ],
-        text_format=ExtractionSchema,
+        text_format=EndpointPlan,
         extra_body={"provider": {"require_parameters": True}},
     )
-    schema = response.output_parsed
+    plan = response.output_parsed
 
-    if schema is None:
-        raise SchemaGenerationError("Model returned no schema")
+    if plan is None:
+        raise SchemaGenerationError("Model returned no plan")
 
-    return schema
+    return plan

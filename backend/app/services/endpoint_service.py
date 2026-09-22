@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import NotFoundError
 from app.models import Endpoint
 from app.services.schema_service import (
-    generate_schema,
+    generate_endpoint_plan,
 )
 from app.services.scrape_service import fetch_clean_html
 from app.services.validation_service import validate_schema
@@ -16,18 +16,19 @@ async def create_endpoint(
     session: AsyncSession,
     user_id: int,
     url: str,
-    description: str,
+    prompt: str,
 ) -> Endpoint:
     html = await fetch_clean_html(url)
-    schema = await generate_schema(html, description)
+    plan = await generate_endpoint_plan(html, prompt)
 
-    validate_schema(html, schema)
+    validate_schema(html, plan.extraction)
 
     endpoint = Endpoint(
         user_id=user_id,
+        name=plan.name,
         url=url,
-        description=description,
-        extraction_schema=schema.model_dump(mode="json"),
+        description=plan.description,
+        extraction_schema=plan.extraction.model_dump(mode="json"),
     )
 
     session.add(endpoint)
