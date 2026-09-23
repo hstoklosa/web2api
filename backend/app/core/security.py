@@ -15,6 +15,10 @@ class TokenType(StrEnum):
     REFRESH = "refresh"
 
 
+ACCESS_COOKIE_NAME = "access_token"
+REFRESH_COOKIE_NAME = "refresh_token"
+
+
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
 

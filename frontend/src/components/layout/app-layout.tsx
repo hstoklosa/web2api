@@ -1,22 +1,11 @@
 import { ActionIcon, Box, Group, Text } from "@mantine/core";
-import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
-import { Outlet, useNavigate } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 
-import { useLogout } from "@/lib/auth";
+import { useLogout, useUser } from "@/lib/auth";
 
 const Header = () => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  const logout = useLogout({
-    onSuccess: async () => {
-      // Leave the app before dropping the cache, so mounted queries don't
-      // refetch without a token. The next user then starts from a clean cache.
-      await navigate("/login");
-      queryClient.clear();
-    },
-  });
+  const logout = useLogout();
 
   return (
     <Box
@@ -51,6 +40,24 @@ const Header = () => {
 };
 
 const AppLayout = () => {
+  const { data: user } = useUser();
+  const location = useLocation();
+
+  // The route guard only checks the session on navigation, so this catches it
+  // ending while the user stays on a page: logout, a failed refresh, or a
+  // logout in another tab that the focus refetch of /auth/me picks up.
+  if (user === null) {
+    const params = new URLSearchParams({
+      redirect: location.pathname + location.search,
+    });
+    return (
+      <Navigate
+        to={`/login?${params}`}
+        replace
+      />
+    );
+  }
+
   return (
     <>
       <Header />

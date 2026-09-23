@@ -1,16 +1,9 @@
 import { Alert, Paper, PasswordInput, Stack, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
 
 import { Button } from "@/components/ui/button";
-import {
-  loginInputSchema,
-  useLogin,
-  userQueryKey,
-  type LoginInput,
-} from "@/lib/auth";
-import { setToken } from "@/lib/auth-token";
+import { loginInputSchema, useLogin, type LoginInput } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/axios";
 
 // Only follow same-origin paths, so the param cannot be used as an open
@@ -24,15 +17,10 @@ const getRedirectTarget = (value: string | null): string => {
 
 export const LoginForm = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
   const login = useLogin({
-    onSuccess: (token) => {
-      setToken(token.access_token);
-      // Drop any previously cached user so the auth middleware loads the
-      // account that just signed in instead of trusting stale data.
-      queryClient.removeQueries({ queryKey: userQueryKey });
+    onSuccess: () => {
       navigate(getRedirectTarget(searchParams.get("redirect")));
     },
   });

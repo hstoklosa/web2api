@@ -2,15 +2,19 @@ import {
   queryOptions,
   useMutation,
   useQuery,
+  useQueryClient,
+  type QueryClient,
   type UseMutationOptions,
 } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import * as z from "zod";
 
-import { clearToken, getToken, tokenSchema } from "./auth-token";
 import { apiClient } from "./axios";
 
 // The session is app-wide state that route guards, layouts, and features all
-// read, so it lives here rather than in a feature.
+// read, so it lives here rather than in a feature. The tokens sit in httpOnly
+// cookies that scripts cannot read, so the cached current user is the only
+// client-side record of the session: a user when signed in, null when not.
 
 export const userSchema = z.object({
   id: z.number(),
@@ -19,11 +23,18 @@ export const userSchema = z.object({
 
 export type User = z.infer<typeof userSchema>;
 
-export type Token = z.infer<typeof tokenSchema>;
-
-export const getUser = async (): Promise<User> => {
-  const response = await apiClient.get("/auth/me");
-  return userSchema.parse(response.data);
+export const getUser = async (): Promise<User | null> => {
+  try {
+    const response = await apiClient.get("/auth/me");
+    return userSchema.parse(response.data);
+  } catch (error) {
+    // The response interceptor has already tried to refresh the session, so a
+    // 401 that reaches here means there is none.
+    if (isAxiosError(error) && error.response?.status === 401) {
+      return null;
+    }
+    throw error;
+  }
 };
 
 export const userQueryKey = ["auth", "user"] as const;
@@ -32,16 +43,21 @@ export const getUserQueryOptions = () => {
   return queryOptions({
     queryKey: userQueryKey,
     queryFn: getUser,
-    // Without a token the request is a guaranteed 401, so don't make it.
-    enabled: getToken() !== null,
-    // The response interceptor has already tried to refresh the token, so a
-    // 401 that reaches here is final and retrying would only repeat it.
-    retry: false,
   });
 };
 
 export const useUser = () => {
   return useQuery(getUserQueryOptions());
+};
+
+/**
+ * Starts the client side of a new session. Anything cached for a previous
+ * user is dropped, and the user the API returned is cached so the route guards
+ * don't have to ask for it again.
+ */
+const startSession = (queryClient: QueryClient, user: User): void => {
+  queryClient.removeQueries();
+  queryClient.setQueryData(userQueryKey, user);
 };
 
 export const loginInputSchema = z.object({
@@ -51,29 +67,26 @@ export const loginInputSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginInputSchema>;
 
-export const loginUser = async (input: LoginInput): Promise<Token> => {
-  // The backend authenticates through OAuth2PasswordRequestForm, which expects
-  // form-encoded `username` and `password` fields rather than JSON.
-  const body = new URLSearchParams({
-    username: input.email,
-    password: input.password,
-  });
-
-  const response = await apiClient.post("/auth/login", body, {
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
-  return tokenSchema.parse(response.data);
+export const loginUser = async (input: LoginInput): Promise<User> => {
+  const response = await apiClient.post("/auth/login", input);
+  return userSchema.parse(response.data);
 };
 
 type UseLoginOptions = Pick<
-  UseMutationOptions<Token, Error, LoginInput>,
+  UseMutationOptions<User, Error, LoginInput>,
   "onSuccess" | "onError"
 >;
 
 export const useLogin = (options?: UseLoginOptions) => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: loginUser,
     ...options,
+    onSuccess: (...args) => {
+      startSession(queryClient, args[0]);
+      return options?.onSuccess?.(...args);
+    },
   });
 };
 
@@ -95,21 +108,21 @@ type UseRegisterOptions = Pick<
 >;
 
 export const useRegister = (options?: UseRegisterOptions) => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: registerUser,
     ...options,
+    onSuccess: (...args) => {
+      startSession(queryClient, args[0]);
+      return options?.onSuccess?.(...args);
+    },
   });
 };
 
 export const logoutUser = async (): Promise<void> => {
-  // The backend clears the httpOnly refresh cookie, which only it can do. The
-  // access token is dropped even if that request fails, so the user is always
-  // signed out locally.
-  try {
-    await apiClient.post("/auth/logout");
-  } finally {
-    clearToken();
-  }
+  // Only the backend can clear the httpOnly session cookies.
+  await apiClient.post("/auth/logout");
 };
 
 type UseLogoutOptions = Pick<
@@ -118,8 +131,17 @@ type UseLogoutOptions = Pick<
 >;
 
 export const useLogout = (options?: UseLogoutOptions) => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: logoutUser,
     ...options,
+    onSuccess: (...args) => {
+      // The app layout redirects to login once the user is null. The previous
+      // user's data is dropped when the next session starts, since clearing
+      // it now would refetch the pages still mounted into 401s.
+      queryClient.setQueryData(userQueryKey, null);
+      return options?.onSuccess?.(...args);
+    },
   });
 };

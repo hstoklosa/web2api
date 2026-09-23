@@ -1,13 +1,13 @@
 import axios, { isAxiosError } from "axios";
 
-import { clearToken, getToken, setToken, tokenSchema } from "./auth-token";
-
 declare module "axios" {
   interface InternalAxiosRequestConfig {
     _retried?: boolean;
   }
 }
 
+// The session lives in httpOnly cookies that the browser attaches to every
+// same-origin request, so no token ever passes through this client.
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? "/v1",
   headers: {
@@ -15,31 +15,17 @@ export const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 let refreshPromise: Promise<boolean> | null = null;
 
 /**
- * Exchanges the httpOnly refresh cookie for a new access token. Concurrent
- * callers share one request, and a failed refresh clears the stored token.
+ * Exchanges the refresh cookie for a new access cookie. Concurrent callers
+ * share one request, and the result says whether the session is still alive.
  */
-export const refreshAccessToken = (): Promise<boolean> => {
+const refreshSession = (): Promise<boolean> => {
   refreshPromise ??= apiClient
     .post("/auth/refresh")
-    .then((response) => {
-      setToken(tokenSchema.parse(response.data).access_token);
-      return true;
-    })
-    .catch(() => {
-      clearToken();
-      return false;
-    })
+    .then(() => true)
+    .catch(() => false)
     .finally(() => {
       refreshPromise = null;
     });
@@ -52,8 +38,8 @@ export const refreshAccessToken = (): Promise<boolean> => {
 const NO_REFRESH_URLS = ["/auth/login", "/auth/refresh"];
 
 apiClient.interceptors.response.use(undefined, async (error: unknown) => {
-  // The access token was rejected, so refresh it once and replay the request.
-  // The request interceptor attaches the new token to the replay.
+  // The access cookie was rejected or has expired, so refresh it once and
+  // replay the request, which the browser sends with the new cookie.
   if (
     isAxiosError(error) &&
     error.response?.status === 401 &&
@@ -62,7 +48,7 @@ apiClient.interceptors.response.use(undefined, async (error: unknown) => {
     !NO_REFRESH_URLS.includes(error.config.url ?? "")
   ) {
     error.config._retried = true;
-    if (await refreshAccessToken()) {
+    if (await refreshSession()) {
       return apiClient(error.config);
     }
   }

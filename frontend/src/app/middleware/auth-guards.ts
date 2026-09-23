@@ -1,24 +1,16 @@
 import { redirect, type MiddlewareFunction } from "react-router";
 
 import { getUserQueryOptions } from "@/lib/auth";
-import { getToken } from "@/lib/auth-token";
-import { refreshAccessToken } from "@/lib/axios";
 import { queryClient } from "@/lib/react-query";
 
 /**
- * Whether the user has a live session. Without a stored token, the refresh
- * cookie may still restore one. The user is served from the cache while fresh
- * and revalidated against /auth/me once stale, where the response interceptor
- * refreshes an expired token before this gives up.
+ * Whether the user has a live session. The user is served from the cache while
+ * fresh and revalidated against /auth/me once stale, where the response
+ * interceptor refreshes an expired access cookie before this gives up.
  */
 const hasSession = async (): Promise<boolean> => {
-  if (getToken() === null && !(await refreshAccessToken())) {
-    return false;
-  }
-
   try {
-    await queryClient.query(getUserQueryOptions());
-    return true;
+    return (await queryClient.query(getUserQueryOptions())) !== null;
   } catch {
     return false;
   }

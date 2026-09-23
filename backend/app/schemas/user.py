@@ -6,9 +6,9 @@ class RegisterUserRequest(BaseModel):
     password: str = Field(min_length=8)
 
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class LoginUserRequest(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class UserResponse(BaseModel):

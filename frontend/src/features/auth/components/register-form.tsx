@@ -1,18 +1,10 @@
 import { Alert, Paper, PasswordInput, Stack, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  registerInputSchema,
-  useLogin,
-  useRegister,
-  userQueryKey,
-  type RegisterInput,
-} from "@/lib/auth";
-import { setToken } from "@/lib/auth-token";
+import { registerInputSchema, useRegister, type RegisterInput } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/axios";
 
 // Confirm password is a UI-only check, so it lives here rather than in the
@@ -30,27 +22,11 @@ type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  const login = useLogin();
-
-  // Registration does not issue a token, so log in with the same credentials
-  // once the account exists.
   const register = useRegister({
-    onSuccess: (user, input) =>
-      login.mutate(input, {
-        onSuccess: (token) => {
-          setToken(token.access_token);
-          // Seed the current-user query with the user we already have so the
-          // dashboard renders without waiting on /auth/me.
-          queryClient.setQueryData(userQueryKey, user);
-          navigate("/dashboard");
-        },
-      }),
+    onSuccess: () => {
+      navigate("/dashboard");
+    },
   });
-
-  const isPending = register.isPending || login.isPending;
-  const error = register.error ?? login.error;
 
   const form = useForm<RegisterFormValues>({
     mode: "uncontrolled",
@@ -75,12 +51,12 @@ export const RegisterForm = () => {
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack>
-          {error && (
+          {register.error && (
             <Alert
               color="red"
               variant="light"
             >
-              {getApiErrorMessage(error)}
+              {getApiErrorMessage(register.error)}
             </Alert>
           )}
 
@@ -107,7 +83,7 @@ export const RegisterForm = () => {
             type="submit"
             fullWidth
             mt="sm"
-            loading={isPending}
+            loading={register.isPending}
           >
             Register
           </Button>
