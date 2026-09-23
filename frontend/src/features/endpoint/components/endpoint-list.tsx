@@ -59,15 +59,15 @@ export const EndpointList = () => {
       <Stack gap="xs">
         <Skeleton
           height={48}
-          radius="md"
+          radius="sm"
         />
         <Skeleton
           height={48}
-          radius="md"
+          radius="sm"
         />
         <Skeleton
           height={48}
-          radius="md"
+          radius="sm"
         />
       </Stack>
     );
@@ -99,6 +99,7 @@ export const EndpointList = () => {
       <TextInput
         aria-label="Search endpoints"
         placeholder="Search endpoints"
+        radius="sm"
         value={search}
         onChange={(event) => handleSearchChange(event.currentTarget.value)}
         rightSectionPointerEvents="all"
@@ -114,6 +115,7 @@ export const EndpointList = () => {
 
       {matches.length === 0 ? (
         <EmptyState
+          mt={64}
           title="No matching endpoints"
           description={`Nothing matches "${search.trim()}".`}
         />
@@ -121,7 +123,7 @@ export const EndpointList = () => {
         <Accordion
           multiple
           variant="separated"
-          radius="md"
+          radius="sm"
           // Collapsing an item should discard its panel state rather than keep
           // it alive off-screen.
           keepMounted={false}
