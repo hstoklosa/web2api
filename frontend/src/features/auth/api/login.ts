@@ -1,6 +1,7 @@
 import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
 import * as z from "zod";
 
+import { tokenSchema } from "@/lib/auth-token";
 import { apiClient } from "@/lib/axios";
 
 export const loginInputSchema = z.object({
@@ -9,11 +10,6 @@ export const loginInputSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginInputSchema>;
-
-export const tokenSchema = z.object({
-  access_token: z.string(),
-  token_type: z.literal("bearer"),
-});
 
 export type Token = z.infer<typeof tokenSchema>;
 

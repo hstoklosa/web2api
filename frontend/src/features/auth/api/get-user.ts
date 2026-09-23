@@ -18,8 +18,8 @@ export const getUserQueryOptions = () => {
     queryFn: getUser,
     // Without a token the request is a guaranteed 401, so don't make it.
     enabled: getToken() !== null,
-    // A rejected token is final; the response interceptor has already
-    // cleared it, so retrying would only repeat the failure.
+    // The response interceptor has already tried to refresh the token, so a
+    // 401 that reaches here is final and retrying would only repeat it.
     retry: false,
   });
 };

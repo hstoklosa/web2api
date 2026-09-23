@@ -2,16 +2,17 @@ import { redirect, type MiddlewareFunction } from "react-router";
 
 import { getUserQueryOptions } from "@/features/auth/api/get-user";
 import { getToken } from "@/lib/auth-token";
+import { refreshAccessToken } from "@/lib/axios";
 import { queryClient } from "@/lib/react-query";
 
 /**
- * Whether the stored token belongs to a live session. Served from the cache
- * while fresh and revalidated against /auth/me once stale, so an expired or
- * revoked token is caught within one staleTime. A rejected token has already
- * been cleared by the response interceptor by the time this returns false.
+ * Whether the user has a live session. Without a stored token, the refresh
+ * cookie may still restore one. The user is served from the cache while fresh
+ * and revalidated against /auth/me once stale, where the response interceptor
+ * refreshes an expired token before this gives up.
  */
 const hasSession = async (): Promise<boolean> => {
-  if (getToken() === null) {
+  if (getToken() === null && !(await refreshAccessToken())) {
     return false;
   }
 

@@ -1,3 +1,10 @@
+import * as z from "zod";
+
+export const tokenSchema = z.object({
+  access_token: z.string(),
+  token_type: z.literal("bearer"),
+});
+
 const TOKEN_KEY = "web2api.access_token";
 
 // localStorage can throw when storage is disabled or unavailable, in which
