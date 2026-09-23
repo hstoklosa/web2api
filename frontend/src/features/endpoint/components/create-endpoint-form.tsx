@@ -1,15 +1,8 @@
-import {
-  Alert,
-  Button,
-  Group,
-  Stack,
-  Textarea,
-  TextInput,
-} from "@mantine/core";
+import { Alert, Group, Stack, Textarea, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
-import { useHover } from "@mantine/hooks";
 import { ClockFading } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   createEndpointInputSchema,
   useCreateEndpoint,
@@ -27,9 +20,6 @@ export const CreateEndpointForm = ({
   onSuccess,
   onCancel,
 }: CreateEndpointFormProps) => {
-  const { hovered: cancelHovered, ref: cancelRef } =
-    useHover<HTMLButtonElement>();
-
   const createEndpoint = useCreateEndpoint({
     onSuccess: (endpoint) => {
       form.reset();
@@ -86,30 +76,17 @@ export const CreateEndpointForm = ({
         >
           {onCancel && (
             <Button
-              ref={cancelRef}
               type="button"
               variant="default"
-              radius="sm"
-              tt="uppercase"
               fz={11}
-              lts="0.05em"
               onClick={onCancel}
-              style={{
-                borderColor: cancelHovered
-                  ? "var(--mantine-color-gray-6)"
-                  : undefined,
-              }}
             >
               Cancel
             </Button>
           )}
           <Button
             type="submit"
-            color="dark"
-            radius="sm"
-            tt="uppercase"
             fz={11}
-            lts="0.05em"
             leftSection={<ClockFading size={12} />}
             loading={createEndpoint.isPending}
           >

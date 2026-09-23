@@ -1,16 +1,9 @@
-import {
-  Button,
-  Container,
-  Group,
-  Modal,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Container, Group, Modal, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { endpointsQueryKey } from "@/features/endpoint/api/get-endpoints";
 import { CreateEndpointForm } from "@/features/endpoint/components/create-endpoint-form";
 import { EndpointList } from "@/features/endpoint/components/endpoint-list";
@@ -28,11 +21,7 @@ const DashboardRoute = () => {
         <Group justify="space-between">
           <Title order={2}>Your Endpoints</Title>
           <Button
-            color="dark"
-            radius="sm"
-            tt="uppercase"
             fz={11}
-            lts="0.05em"
             leftSection={<Plus size={12} />}
             onClick={modal.open}
           >

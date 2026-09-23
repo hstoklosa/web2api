@@ -20,6 +20,17 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Mantine's polymorphic wrappers are components, so shared UI built
+      // with them stays eligible for fast refresh.
+      'react-refresh/only-export-components': [
+        'error',
+        {
+          allowConstantExport: true,
+          extraHOCs: ['createPolymorphicComponent'],
+        },
+      ],
+    },
   },
   {
     // Route modules export data-mode APIs alongside their component.

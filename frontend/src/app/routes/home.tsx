@@ -1,5 +1,4 @@
 import {
-  Button,
   Flex,
   Group,
   Paper,
@@ -8,8 +7,10 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useHover, useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery } from "@mantine/hooks";
 import { Link } from "react-router";
+
+import { Button } from "@/components/ui/button";
 
 const requestSnippet = `curl -X GET \\
   /v1/endpoints/dba9303c-fd9d-4982-bafd-05e7d872a722/data \\
@@ -41,8 +42,6 @@ const Nav = () => {
 };
 
 const Hero = () => {
-  const { hovered, ref } = useHover<HTMLAnchorElement>();
-
   return (
     <Stack
       align="center"
@@ -55,35 +54,22 @@ const Hero = () => {
         size="lg"
         maw={560}
       >
-        Describe the data you want in plain English. Get back a stable JSON API you
-        can poll anytime - no scraping code, no maintenance.
+        Describe the data you want in plain English. Get back a stable JSON API
+        you can poll anytime - no scraping code, no maintenance.
       </Text>
       <Group>
         <Button
-          color="dark"
-          radius="sm"
           size="md"
-          tt="uppercase"
-          fz="xs"
-          lts="0.05em"
           component={Link}
           to="/register"
         >
           Get started free
         </Button>
         <Button
-          ref={ref}
           variant="default"
-          radius="sm"
           size="md"
-          tt="uppercase"
-          fz="xs"
-          lts="0.05em"
           component={Link}
           to="/login"
-          style={{
-            borderColor: hovered ? "var(--mantine-color-gray-6)" : undefined,
-          }}
         >
           Log in
         </Button>
@@ -207,8 +193,8 @@ const HowItWorks = () => {
           c="dimmed"
           mb={8}
         >
-          We re-run the saved extraction and return fresh JSON - fast, no more LLM
-          calls.
+          We re-run the saved extraction and return fresh JSON - fast, no more
+          LLM calls.
         </Text>
         <Text
           ff="monospace"

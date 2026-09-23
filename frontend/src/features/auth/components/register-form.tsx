@@ -1,16 +1,10 @@
-import {
-  Alert,
-  Button,
-  Paper,
-  PasswordInput,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Alert, Paper, PasswordInput, Stack, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import * as z from "zod";
 
+import { Button } from "@/components/ui/button";
 import { userQueryKey } from "@/features/auth/api/get-user";
 import { useLogin } from "@/features/auth/api/login";
 import {
@@ -111,11 +105,6 @@ export const RegisterForm = () => {
           />
           <Button
             type="submit"
-            color="dark"
-            radius="sm"
-            tt="uppercase"
-            fz="xs"
-            lts="0.05em"
             fullWidth
             mt="sm"
             loading={isPending}

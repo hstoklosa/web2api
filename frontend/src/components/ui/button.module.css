@@ -1,0 +1,5 @@
+/* Darken the outline on hover so secondary buttons respond like the filled
+   ones, which Mantine only gives a background change. */
+.root[data-variant="default"]:not(:disabled, [data-disabled]):hover {
+  border-color: var(--mantine-color-gray-6);
+}
