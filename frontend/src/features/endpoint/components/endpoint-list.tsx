@@ -89,7 +89,7 @@ export const EndpointList = () => {
     return (
       <EmptyState
         title="No endpoints yet"
-        description="Create one above to turn a page into an API."
+        description="Create one to turn a page into an API."
       />
     );
   }

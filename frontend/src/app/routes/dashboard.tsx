@@ -1,5 +1,15 @@
-import { Container, Stack, Title } from "@mantine/core";
+import {
+  Button,
+  Container,
+  Group,
+  Modal,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 
 import { endpointsQueryKey } from "@/features/endpoint/api/get-endpoints";
 import { CreateEndpointForm } from "@/features/endpoint/components/create-endpoint-form";
@@ -7,28 +17,70 @@ import { EndpointList } from "@/features/endpoint/components/endpoint-list";
 
 const DashboardRoute = () => {
   const queryClient = useQueryClient();
+  const [modalOpened, modal] = useDisclosure(false);
 
   return (
     <Container
-      size={480}
+      size={840}
       py="xl"
     >
       <Stack>
-        <Title order={2}>New endpoint</Title>
+        <Group justify="space-between">
+          <Title order={2}>Your Endpoints</Title>
+          <Button
+            color="dark"
+            radius="sm"
+            tt="uppercase"
+            fz={11}
+            lts="0.05em"
+            leftSection={<Plus size={12} />}
+            onClick={modal.open}
+          >
+            New endpoint
+          </Button>
+        </Group>
+        <EndpointList />
+      </Stack>
+
+      <Modal
+        opened={modalOpened}
+        onClose={modal.close}
+        title="New endpoint"
+        size={520}
+        padding={24}
+        radius="md"
+        centered
+        withCloseButton={false}
+        overlayProps={{ backgroundOpacity: 0.35 }}
+        styles={{
+          // Pull the description up under the title instead of leaving the
+          // header's default 60px minimum height between them.
+          header: {
+            minHeight: "auto",
+            paddingBottom: 6,
+          },
+          title: {
+            fontSize: "var(--mantine-font-size-lg)",
+            fontWeight: 600,
+          },
+        }}
+      >
+        <Text
+          c="dimmed"
+          fz="xs"
+          mb="md"
+        >
+          Paste a URL and describe what you want from it. We&apos;ll either
+          match an existing API or build a new one.
+        </Text>
         <CreateEndpointForm
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: endpointsQueryKey });
+            modal.close();
           }}
+          onCancel={modal.close}
         />
-
-        <Title
-          order={2}
-          mt="lg"
-        >
-          Your endpoints
-        </Title>
-        <EndpointList />
-      </Stack>
+      </Modal>
     </Container>
   );
 };
