@@ -22,6 +22,7 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Follow bulletproof-react layout: app setup in `src/app`, feature code in `src/features/<feature>/{api,components}`, shared UI in `src/components`, shared clients in `src/lib`.
 - Import across those directories with the `@/*` alias, and keep relative paths for siblings within one directory.
 - Keep imports unidirectional: features may import from `src/lib` and `src/components`, but never from `src/app` or another feature.
+- Keep the session (current user, login, register, logout) in `src/lib/auth.ts`, since route guards, layouts, and features all need it, and keep only auth UI such as the login and register forms in `src/features/auth`.
 - Declare routes in `src/app/router.tsx`, keeping route components in `src/app/routes` nested under `RootLayout` from `src/components/layout`.
 - Import route components statically, and reach for `lazy` only when a route pulls in a heavy dependency, since code splitting costs a round trip before that route renders.
 - Register providers in `src/app/provider.tsx`.

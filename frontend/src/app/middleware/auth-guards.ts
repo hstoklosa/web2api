@@ -1,6 +1,6 @@
 import { redirect, type MiddlewareFunction } from "react-router";
 
-import { getUserQueryOptions } from "@/features/auth/api/get-user";
+import { getUserQueryOptions } from "@/lib/auth";
 import { getToken } from "@/lib/auth-token";
 import { refreshAccessToken } from "@/lib/axios";
 import { queryClient } from "@/lib/react-query";

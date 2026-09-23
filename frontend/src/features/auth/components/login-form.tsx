@@ -4,12 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
 
 import { Button } from "@/components/ui/button";
-import { userQueryKey } from "@/features/auth/api/get-user";
 import {
   loginInputSchema,
   useLogin,
+  userQueryKey,
   type LoginInput,
-} from "@/features/auth/api/login";
+} from "@/lib/auth";
 import { setToken } from "@/lib/auth-token";
 import { getApiErrorMessage } from "@/lib/axios";
 

@@ -5,13 +5,13 @@ import { useNavigate } from "react-router";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
-import { userQueryKey } from "@/features/auth/api/get-user";
-import { useLogin } from "@/features/auth/api/login";
 import {
   registerInputSchema,
+  useLogin,
   useRegister,
+  userQueryKey,
   type RegisterInput,
-} from "@/features/auth/api/register";
+} from "@/lib/auth";
 import { setToken } from "@/lib/auth-token";
 import { getApiErrorMessage } from "@/lib/axios";
 
