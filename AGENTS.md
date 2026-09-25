@@ -16,6 +16,7 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Persist endpoints with a UUID, URL, description, and PostgreSQL JSONB extraction schema.
 - Authenticate browser sessions with httpOnly, SameSite=strict cookies: `access_token` scoped to `/v1` and `refresh_token` scoped to `/v1/auth`, and never return tokens in response bodies.
 - Protect routes with `CurrentUserDep`, and add third-party access as API keys accepted in `get_current_user` rather than by exposing the session cookies.
+- Scope every query for a user's resources by `user_id` in the service, including updates and deletes, and raise `NotFoundError` for rows the user does not own rather than a 403, so ids belonging to other users are indistinguishable from missing ones.
 - The API registers no CORS middleware, since the Vite dev proxy keeps browser requests same-origin, so a split-origin deployment has to add `CORSMiddleware`, switch the cookies to SameSite=None with CSRF protection, and set `withCredentials` on `apiClient`.
 
 ## Frontend Conventions
