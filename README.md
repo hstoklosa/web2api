@@ -2,6 +2,76 @@
 
 Turn any URL + plain description into a REST endpoint that returns structured JSON data.
 
+## Running locally
+
+You need Docker, [uv](https://docs.astral.sh/uv/) and Node.js.
+Postgres runs in Docker, while the backend and frontend run on your machine.
+
+### Configuration
+
+Copy the example environment file and fill it in:
+
+```sh
+cp backend/.env.example backend/.env
+```
+
+| Variable | Value |
+| --- | --- |
+| `OPENAI_API_KEY` | An API key for the provider at `OPENAI_BASE_URL`, which defaults to OpenRouter. |
+| `DATABASE_URL` | `postgresql+asyncpg://web2api:web2api@localhost:5432/web2api` for the Postgres in `docker-compose.yaml`. |
+| `SECRET_KEY` | A random string for signing session tokens, such as the output of `openssl rand -hex 32`. |
+
+The other variables have working defaults in the example file.
+
+### Backend
+
+From `backend/`:
+
+```sh
+docker compose up -d postgres
+uv run alembic upgrade head
+uv run fastapi dev
+```
+
+The API runs at http://localhost:8000, with interactive docs at http://localhost:8000/docs.
+If port 5432 is taken, start Postgres with `POSTGRES_PORT=5433 docker compose up -d postgres` and change the port in `DATABASE_URL` to match.
+
+The app does not create tables itself, so run `uv run alembic upgrade head` again whenever you pull changes that add migrations.
+It only applies the migrations the database has not seen yet, so running it when nothing changed does nothing.
+
+### Frontend
+
+From `frontend/`:
+
+```sh
+npm install
+npm run dev
+```
+
+The app runs at http://localhost:5173.
+The dev server proxies `/v1` to the backend on port 8000, so start the backend first.
+
+### Changing the database schema
+
+The schema is managed with [Alembic](https://alembic.sqlalchemy.org/) migrations in `backend/migrations/versions`.
+After changing a model in `backend/app/models`, generate a migration from `backend/`:
+
+```sh
+uv run alembic revision --autogenerate -m "add foo to endpoints"
+```
+
+Read the generated file before applying it.
+Autogenerate turns a renamed column into a dropped column and a new one, which loses its data, and a new non-null column on a table with rows needs a `server_default` or a backfill.
+Then apply it with `uv run alembic upgrade head`, and commit it together with the model change.
+
+`uv run alembic check` fails if the models have changes that no migration covers, and needs the database to be up to date first.
+`uv run alembic current` shows which migration the database is at, and `uv run alembic downgrade -1` undoes the last one.
+
+### Tests and lint
+
+- Backend tests, from `backend/`: `uv run pytest`.
+- Frontend lint and formatting, from `frontend/`: `npm run lint`, with `npm run format` to fix formatting.
+
 ## Architecture
 
 ## Limits and safety
