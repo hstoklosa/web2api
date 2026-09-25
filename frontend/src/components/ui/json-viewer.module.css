@@ -1,0 +1,105 @@
+/* Replaces react-json-view-lite's stylesheet, whose fixed colours ignore the
+   Mantine theme and colour scheme. */
+.root {
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-8)
+  );
+  border-radius: var(--mantine-radius-sm);
+}
+
+.container {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.child {
+  margin: 0;
+  padding: 0 0 0 1.25em;
+}
+
+.container > .child {
+  padding-left: 0;
+}
+
+.childFields {
+  margin: 0;
+  padding: 0;
+}
+
+.label {
+  margin-right: 0.5em;
+  font-weight: 500;
+  color: var(--mantine-color-text);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.punctuation {
+  color: var(--mantine-color-dimmed);
+}
+
+.string {
+  color: light-dark(var(--mantine-color-teal-8), var(--mantine-color-teal-4));
+}
+
+.number {
+  color: light-dark(var(--mantine-color-blue-7), var(--mantine-color-blue-4));
+}
+
+.boolean {
+  color: light-dark(
+    var(--mantine-color-orange-8),
+    var(--mantine-color-orange-4)
+  );
+}
+
+.null,
+.other {
+  font-style: italic;
+  color: var(--mantine-color-dimmed);
+}
+
+.icon {
+  display: inline-block;
+  width: 1em;
+  margin-right: 0.25em;
+  cursor: pointer;
+  user-select: none;
+  color: var(--mantine-color-dimmed);
+}
+
+.icon:hover,
+.collapsedContent:hover {
+  color: var(--mantine-color-text);
+}
+
+.icon:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+.expandIcon::after {
+  content: "\25B8";
+}
+
+.collapseIcon::after {
+  content: "\25BE";
+}
+
+.collapsedContent {
+  margin: 0 0.25em;
+  cursor: pointer;
+  color: var(--mantine-color-dimmed);
+}
+
+.collapsedContent::after {
+  content: "\2026";
+}

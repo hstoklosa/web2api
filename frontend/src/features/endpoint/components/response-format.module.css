@@ -1,0 +1,31 @@
+.root {
+  margin: 0;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-8)
+  );
+  border-radius: var(--mantine-radius-sm);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.field {
+  padding-left: 1.25em;
+}
+
+.name {
+  font-weight: 500;
+  color: var(--mantine-color-text);
+}
+
+.type {
+  color: light-dark(var(--mantine-color-blue-7), var(--mantine-color-blue-4));
+}
+
+.punctuation {
+  color: var(--mantine-color-dimmed);
+}

@@ -2,9 +2,7 @@ import {
   Accordion,
   Alert,
   CloseButton,
-  Code,
   EmptyState,
-  ScrollArea,
   Skeleton,
   Stack,
   Text,
@@ -15,6 +13,8 @@ import { useSearchParams } from "react-router";
 
 import { useEndpoints } from "@/features/endpoint/api/get-endpoints";
 import { getApiErrorMessage } from "@/lib/axios";
+
+import { EndpointDetails } from "./endpoint-details";
 
 const SEARCH_PARAM = "q";
 
@@ -156,14 +156,7 @@ export const EndpointList = () => {
                 </Text>
               </Accordion.Control>
               <Accordion.Panel>
-                <Stack gap="xs">
-                  <Text fz="sm">{endpoint.description}</Text>
-                  <ScrollArea.Autosize mah={240}>
-                    <Code block>
-                      {JSON.stringify(endpoint.schema, null, 2)}
-                    </Code>
-                  </ScrollArea.Autosize>
-                </Stack>
+                <EndpointDetails endpoint={endpoint} />
               </Accordion.Panel>
             </Accordion.Item>
           ))}
