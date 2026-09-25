@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     OPENAI_BASE_URL: str
     OPENAI_API_KEY: str
+    LLM_MODEL: str = "openrouter/free"
     DATABASE_URL: str
 
     SECRET_KEY: str

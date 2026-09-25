@@ -25,7 +25,6 @@ from app.schemas.extract import EndpointPlan
 logger = logging.getLogger(__name__)
 
 MAX_HTML_CHARS = 80_000
-DEFAULT_MODEL = "openrouter/free"
 
 # Generating a plan for a large page regularly takes over a minute. The SDK
 # retries timeouts, 429s and 5xx responses on its own, and the total deadline
@@ -99,12 +98,14 @@ HTML content:
     try:
         async with asyncio.timeout(TOTAL_TIMEOUT_SECONDS):
             response = await openai_client.responses.parse(
-                model=DEFAULT_MODEL,
+                model=settings.LLM_MODEL,
                 input=[
                     {"role": "system", "content": system_prompt.strip()},
                     {"role": "user", "content": user_prompt.strip()},
                 ],
                 text_format=EndpointPlan,
+                # OpenRouter routes only to models that support every parameter
+                # sent, which here means structured output.
                 extra_body={"provider": {"require_parameters": True}},
             )
     except (TimeoutError, APITimeoutError) as exc:
