@@ -14,6 +14,9 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Keep route handlers focused on HTTP concerns and place request and response models in `app/schemas`.
 - Put business logic and infrastructure error translation in `app/services`.
 - Persist endpoints with a UUID, URL, description, and PostgreSQL JSONB extraction schema.
+- Change the schema only through Alembic migrations in `backend/migrations`, since the app does not create tables at startup.
+- Generate each migration with `--autogenerate`, then review it before committing, since autogenerate turns renames into a drop plus an add and needs a `server_default` or backfill for new non-null columns on existing rows.
+- Commit each migration together with the model change it belongs to.
 - Authenticate browser sessions with httpOnly, SameSite=strict cookies: `access_token` scoped to `/v1` and `refresh_token` scoped to `/v1/auth`, and never return tokens in response bodies.
 - Protect routes with `CurrentUserDep`, and add third-party access as API keys accepted in `get_current_user` rather than by exposing the session cookies.
 - Scope every query for a user's resources by `user_id` in the service, including updates and deletes, and raise `NotFoundError` for rows the user does not own rather than a 403, so ids belonging to other users are indistinguishable from missing ones.
@@ -44,7 +47,9 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 
 ## Commands
 
-- Backend, from `backend/`: `docker compose up -d postgres` once, then `uv run fastapi dev`.
+- Backend, from `backend/`: `docker compose up -d postgres` once, then `uv run alembic upgrade head` after every pull that adds migrations, then `uv run fastapi dev`.
+- New migration, from `backend/`: `uv run alembic revision --autogenerate -m "<what changed>"`, then `uv run alembic upgrade head`.
+- Schema drift check, from `backend/`: `uv run alembic check` fails if the models and the migrations disagree.
 - Backend tests, from `backend/`: `uv run pytest`.
 - Frontend, from `frontend/`: `npm run dev`, `npm run build`, `npm run lint`.
 - `npm run lint` also checks formatting against `frontend/.prettierrc.json`, so format with `npm run format` from `frontend/` rather than running Prettier with its defaults or on individual files.
