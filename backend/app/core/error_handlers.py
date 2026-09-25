@@ -3,7 +3,10 @@ from fastapi.responses import JSONResponse
 
 from app.core.exceptions import (
     AuthenticationError,
+    BlockedURLError,
     ConflictError,
+    FetchError,
+    FetchTimeoutError,
     NotFoundError,
     SchemaGenerationError,
     SchemaValidationError,
@@ -52,6 +55,27 @@ async def schema_validation_error_handler(
     )
 
 
+async def blocked_url_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        content={"detail": str(exc)},
+    )
+
+
+async def fetch_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        content={"detail": str(exc)},
+    )
+
+
+async def fetch_timeout_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+        content={"detail": str(exc)},
+    )
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Register domain error handlers on the FastAPI app."""
     app.add_exception_handler(NotFoundError, not_found_error_handler)
@@ -59,3 +83,6 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AuthenticationError, authentication_error_handler)
     app.add_exception_handler(SchemaGenerationError, schema_generation_error_handler)
     app.add_exception_handler(SchemaValidationError, schema_validation_error_handler)
+    app.add_exception_handler(BlockedURLError, blocked_url_error_handler)
+    app.add_exception_handler(FetchError, fetch_error_handler)
+    app.add_exception_handler(FetchTimeoutError, fetch_timeout_error_handler)

@@ -20,3 +20,15 @@ class SchemaGenerationError(AppError):
 
 class SchemaValidationError(AppError):
     pass
+
+
+class BlockedURLError(AppError):
+    pass
+
+
+class FetchError(AppError):
+    pass
+
+
+class FetchTimeoutError(FetchError):
+    pass

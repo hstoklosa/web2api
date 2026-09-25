@@ -17,6 +17,8 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Authenticate browser sessions with httpOnly, SameSite=strict cookies: `access_token` scoped to `/v1` and `refresh_token` scoped to `/v1/auth`, and never return tokens in response bodies.
 - Protect routes with `CurrentUserDep`, and add third-party access as API keys accepted in `get_current_user` rather than by exposing the session cookies.
 - Scope every query for a user's resources by `user_id` in the service, including updates and deletes, and raise `NotFoundError` for rows the user does not own rather than a 403, so ids belonging to other users are indistinguishable from missing ones.
+- Fetch user-supplied URLs only through `fetch_html` in `app/services/scrape_service.py`, or through a client built on `PublicOnlyTransport` from `app/core/safe_http.py`, never with a plain httpx client, so every connection, including each redirect hop, is checked against private and reserved addresses.
+- Translate fetch failures into `BlockedURLError` (422), `FetchError` (502), or `FetchTimeoutError` (504) with a message fit for end users, since the frontend shows `detail` verbatim.
 - The API registers no CORS middleware, since the Vite dev proxy keeps browser requests same-origin, so a split-origin deployment has to add `CORSMiddleware`, switch the cookies to SameSite=None with CSRF protection, and set `withCredentials` on `apiClient`.
 
 ## Frontend Conventions
@@ -42,5 +44,6 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 ## Commands
 
 - Backend, from `backend/`: `docker compose up -d postgres` once, then `uv run fastapi dev`.
+- Backend tests, from `backend/`: `uv run pytest`.
 - Frontend, from `frontend/`: `npm run dev`, `npm run build`, `npm run lint`.
 - `npm run lint` also checks formatting against `frontend/.prettierrc.json`, so format with `npm run format` from `frontend/` rather than running Prettier with its defaults or on individual files.
