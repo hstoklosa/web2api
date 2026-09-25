@@ -35,6 +35,7 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Configure the Mantine theme (fonts, colors, etc.) in `src/app/theme.ts` and pass it to `MantineProvider` in `src/app/provider.tsx`.
 - Call the API through `apiClient` in `src/lib/axios.ts`, whose `/v1` base URL `vite.config.ts` proxies to the backend in development.
 - Pair each endpoint with its zod schemas and TanStack Query hook in one feature module, parsing the response rather than casting it.
+- Keep the query cache in sync inside each mutation hook, so every caller gets consistent data, and leave `onSuccess` for caller concerns such as closing a modal or navigating.
 - Share one zod schema per payload between form validation, via `schemaResolver` from `@mantine/form`, and the request it feeds.
 
 ## Commands

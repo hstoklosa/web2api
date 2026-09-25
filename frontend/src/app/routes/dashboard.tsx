@@ -1,16 +1,13 @@
 import { Container, Group, Modal, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 
 import { Head } from "@/components/seo/head";
 import { Button } from "@/components/ui/button";
-import { endpointsQueryKey } from "@/features/endpoint/api/get-endpoints";
 import { CreateEndpointForm } from "@/features/endpoint/components/create-endpoint-form";
 import { EndpointList } from "@/features/endpoint/components/endpoint-list";
 
 const DashboardRoute = () => {
-  const queryClient = useQueryClient();
   const [modalOpened, modal] = useDisclosure(false);
 
   return (
@@ -65,10 +62,7 @@ const DashboardRoute = () => {
           match an existing API or build a new one.
         </Text>
         <CreateEndpointForm
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: endpointsQueryKey });
-            modal.close();
-          }}
+          onSuccess={modal.close}
           onCancel={modal.close}
         />
       </Modal>

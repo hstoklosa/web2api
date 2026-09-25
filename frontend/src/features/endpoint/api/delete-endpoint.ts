@@ -6,7 +6,6 @@ import {
 
 import { apiClient } from "@/lib/axios";
 
-import type { Endpoint } from "./endpoint";
 import { endpointsQueryKey } from "./get-endpoints";
 
 export const deleteEndpoint = async (id: string): Promise<void> => {
@@ -26,15 +25,17 @@ export const useDeleteEndpoint = ({
 
   return useMutation({
     mutationFn: deleteEndpoint,
-    onSuccess: (...args) => {
+    onSuccess: async (...args) => {
       const [, id] = args;
-      // Drop the endpoint from the cached list rather than refetching it, and
-      // forget any data fetched from it, since neither can come back.
-      queryClient.setQueryData<Endpoint[]>(endpointsQueryKey, (endpoints) =>
-        endpoints?.filter((endpoint) => endpoint.id !== id),
-      );
+      // The endpoint's data can never be fetched again, so drop it outright.
       queryClient.removeQueries({ queryKey: [...endpointsQueryKey, id] });
-      return onSuccess?.(...args);
+      // Awaiting the refetch keeps the mutation pending until the endpoint
+      // has left the list.
+      await queryClient.invalidateQueries({
+        queryKey: endpointsQueryKey,
+        exact: true,
+      });
+      await onSuccess?.(...args);
     },
     ...options,
   });
