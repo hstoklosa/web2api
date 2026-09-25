@@ -1,6 +1,7 @@
 import { Anchor, Container, Flex, Stack, Text, Title } from "@mantine/core";
 import { Link } from "react-router";
 
+import { Head } from "@/components/seo/head";
 import { LoginForm } from "@/features/auth/components/login-form";
 
 const LoginRoute = () => {
@@ -12,6 +13,7 @@ const LoginRoute = () => {
       justify="center"
       px="md"
     >
+      <Head title="Log in" />
       <Container
         size={420}
         w="100%"

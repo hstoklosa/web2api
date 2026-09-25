@@ -10,6 +10,7 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { Link } from "react-router";
 
+import { Head } from "@/components/seo/head";
 import { Button } from "@/components/ui/button";
 
 const requestSnippet = `curl -X GET \\
@@ -221,6 +222,9 @@ const HomeRoute = () => {
       px="md"
       style={{ overflow: isDesktop ? "hidden" : "visible" }}
     >
+      <Head
+        description="Describe the data you want from any webpage in plain English and get back a stable JSON API."
+      />
       <Nav />
       <Flex
         flex={1}

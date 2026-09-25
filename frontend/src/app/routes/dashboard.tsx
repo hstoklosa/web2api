@@ -3,6 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 
+import { Head } from "@/components/seo/head";
 import { Button } from "@/components/ui/button";
 import { endpointsQueryKey } from "@/features/endpoint/api/get-endpoints";
 import { CreateEndpointForm } from "@/features/endpoint/components/create-endpoint-form";
@@ -17,6 +18,7 @@ const DashboardRoute = () => {
       size={840}
       py="xl"
     >
+      <Head title="Dashboard" />
       <Stack>
         <Group justify="space-between">
           <Title order={2}>Your Endpoints</Title>

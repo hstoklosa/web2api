@@ -1,6 +1,7 @@
 import { Anchor, Container, Flex, Stack, Text, Title } from "@mantine/core";
 import { Link } from "react-router";
 
+import { Head } from "@/components/seo/head";
 import { RegisterForm } from "@/features/auth/components/register-form";
 
 const RegisterRoute = () => {
@@ -12,6 +13,7 @@ const RegisterRoute = () => {
       justify="center"
       px="md"
     >
+      <Head title="Register" />
       <Container
         size={420}
         w="100%"
