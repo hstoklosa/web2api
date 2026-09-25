@@ -23,6 +23,8 @@ def to_response(endpoint: Endpoint) -> EndpointResponse:
         url=endpoint.url,
         description=endpoint.description,
         schema_=extraction.to_json_schema(),
+        created_at=endpoint.created_at,
+        updated_at=endpoint.updated_at,
     )
 
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -14,3 +15,5 @@ class EndpointResponse(BaseModel):
     url: str
     description: str
     schema_: dict = Field(serialization_alias="schema")
+    created_at: datetime
+    updated_at: datetime

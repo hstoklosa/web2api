@@ -57,7 +57,10 @@ async def get_endpoints_by_user(
     user_id: int,
 ) -> Sequence[Endpoint]:
     result = await session.scalars(
-        select(Endpoint).where(Endpoint.user_id == user_id).order_by(Endpoint.name)
+        select(Endpoint)
+        .where(Endpoint.user_id == user_id)
+        # Newest first, with the id breaking ties so the order is stable.
+        .order_by(Endpoint.created_at.desc(), Endpoint.id)
     )
     return result.all()
 

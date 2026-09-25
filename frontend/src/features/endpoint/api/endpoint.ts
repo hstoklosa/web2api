@@ -27,6 +27,8 @@ export const endpointSchema = z.object({
   url: z.string(),
   description: z.string(),
   schema: responseSchemaSchema,
+  created_at: z.iso.datetime({ offset: true }),
+  updated_at: z.iso.datetime({ offset: true }),
 });
 
 export type Endpoint = z.infer<typeof endpointSchema>;

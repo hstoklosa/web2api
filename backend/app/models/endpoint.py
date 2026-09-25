@@ -5,10 +5,10 @@ from sqlalchemy import ForeignKey, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base
+from app.models.base import Base, TimestampMixin
 
 
-class Endpoint(Base):
+class Endpoint(TimestampMixin, Base):
     __tablename__ = "endpoints"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
