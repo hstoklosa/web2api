@@ -10,7 +10,9 @@ def _validate_selector_syntax(label: str, selector: str, issues: list[str]) -> N
     try:
         BeautifulSoup("", "html.parser").select(selector)
     except SelectorSyntaxError as exc:
-        issues.append(f"{label} selector {selector!r} is not a valid CSS selector: {exc}")
+        issues.append(
+            f"{label} selector {selector!r} is not a valid CSS selector: {exc}"
+        )
 
 
 def _validate_structure(schema: ExtractionSchema) -> list[str]:
@@ -37,12 +39,16 @@ def _validate_structure(schema: ExtractionSchema) -> list[str]:
     return issues
 
 
-def _validate_matches_html(html: str, schema: ExtractionSchema, issues: list[str]) -> None:
+def _validate_matches_html(
+    html: str, schema: ExtractionSchema, issues: list[str]
+) -> None:
     soup = BeautifulSoup(html, "html.parser")
     items = soup.select(schema.item_selector) if schema.item_selector else [soup]
 
     if schema.item_selector and not items:
-        issues.append(f"item_selector {schema.item_selector!r} does not match any element")
+        issues.append(
+            f"item_selector {schema.item_selector!r} does not match any element"
+        )
         return
 
     for field in schema.fields:

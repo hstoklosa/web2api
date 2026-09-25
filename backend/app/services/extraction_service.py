@@ -6,7 +6,16 @@ from bs4.element import Tag
 from app.schemas.extract import ExtractionSchema, ExtractionSchemaField
 
 _TRUE_TEXTS = {"true", "yes", "y", "in stock", "available", "checked", "1", "on"}
-_FALSE_TEXTS = {"false", "no", "n", "out of stock", "unavailable", "unchecked", "0", "off"}
+_FALSE_TEXTS = {
+    "false",
+    "no",
+    "n",
+    "out of stock",
+    "unavailable",
+    "unchecked",
+    "0",
+    "off",
+}
 _NUMERIC_STRIP_RE = re.compile(r"[^0-9.\-]")
 
 
