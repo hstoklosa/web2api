@@ -40,12 +40,21 @@ Pages are decoded with the charset from the `Content-Type` header, falling back 
 
 Only the HTML the server returns is read, and no JavaScript runs, so data that a page renders in the browser is out of reach.
 
+### Generation limits
+
+Building an endpoint asks the AI model for an extraction plan once.
+Each attempt may take up to 2 minutes, and timeouts, rate limits and provider errors are retried up to twice, but the whole step is cut off after 3 minutes.
+The plan's selectors are then checked against the fetched page, and the endpoint is only saved if every field matches something.
+
 ### Errors
 
 | Status | Meaning |
 | --- | --- |
 | 422 | The URL points to a private or reserved address. |
 | 502 | The page could not be fetched: an error status, a connection, DNS or TLS failure, too many redirects, a redirect to a non-HTTP URL, a non-HTML response, or a response over 5 MB. |
-| 504 | The page took longer than 20 seconds. |
+| 502 | The AI model could not be reached, failed, or returned an unusable plan, or its selectors found none of the requested data on the page. |
+| 503 | The AI model is rate limited. |
+| 504 | The page took longer than 20 seconds, or the AI model took longer than 3 minutes. |
 
 Each error's `detail` says what went wrong in plain language, and the app shows it as is.
+The technical cause, such as a provider error or the selectors that missed, goes to the server log instead.

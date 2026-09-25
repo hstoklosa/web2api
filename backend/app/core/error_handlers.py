@@ -1,88 +1,18 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from app.core.exceptions import (
-    AuthenticationError,
-    BlockedURLError,
-    ConflictError,
-    FetchError,
-    FetchTimeoutError,
-    NotFoundError,
-    SchemaGenerationError,
-    SchemaValidationError,
-)
+from app.core.exceptions import AppError
 
 
-async def not_found_error_handler(request: Request, exc: Exception) -> JSONResponse:
+async def app_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    assert isinstance(exc, AppError)
     return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
+        status_code=exc.status_code,
         content={"detail": str(exc)},
-    )
-
-
-async def conflict_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_409_CONFLICT,
-        content={"detail": str(exc)},
-    )
-
-
-async def authentication_error_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"detail": str(exc)},
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-
-async def schema_generation_error_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_502_BAD_GATEWAY,
-        content={"detail": str(exc)},
-    )
-
-
-async def schema_validation_error_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_502_BAD_GATEWAY,
-        content={"detail": str(exc)},
-    )
-
-
-async def blocked_url_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-        content={"detail": str(exc)},
-    )
-
-
-async def fetch_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_502_BAD_GATEWAY,
-        content={"detail": str(exc)},
-    )
-
-
-async def fetch_timeout_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-        content={"detail": str(exc)},
+        headers=exc.headers,
     )
 
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Register domain error handlers on the FastAPI app."""
-    app.add_exception_handler(NotFoundError, not_found_error_handler)
-    app.add_exception_handler(ConflictError, conflict_error_handler)
-    app.add_exception_handler(AuthenticationError, authentication_error_handler)
-    app.add_exception_handler(SchemaGenerationError, schema_generation_error_handler)
-    app.add_exception_handler(SchemaValidationError, schema_validation_error_handler)
-    app.add_exception_handler(BlockedURLError, blocked_url_error_handler)
-    app.add_exception_handler(FetchError, fetch_error_handler)
-    app.add_exception_handler(FetchTimeoutError, fetch_timeout_error_handler)
+    app.add_exception_handler(AppError, app_error_handler)
