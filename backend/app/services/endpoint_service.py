@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
@@ -60,3 +60,18 @@ async def get_endpoints_by_user(
         select(Endpoint).where(Endpoint.user_id == user_id).order_by(Endpoint.name)
     )
     return result.all()
+
+
+async def delete_endpoint(
+    session: AsyncSession,
+    id: UUID,
+    user_id: int,
+) -> None:
+    deleted_id = await session.scalar(
+        delete(Endpoint)
+        .where(Endpoint.id == id, Endpoint.user_id == user_id)
+        .returning(Endpoint.id)
+    )
+    if deleted_id is None:
+        raise NotFoundError("Endpoint not found")
+    await session.commit()

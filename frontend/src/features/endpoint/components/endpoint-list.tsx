@@ -3,6 +3,7 @@ import {
   Alert,
   CloseButton,
   EmptyState,
+  Group,
   Skeleton,
   Stack,
   Text,
@@ -14,6 +15,7 @@ import { useSearchParams } from "react-router";
 import { useEndpoints } from "@/features/endpoint/api/get-endpoints";
 import { getApiErrorMessage } from "@/lib/axios";
 
+import { EndpointActions } from "./endpoint-actions";
 import { EndpointDetails } from "./endpoint-details";
 
 const SEARCH_PARAM = "q";
@@ -88,6 +90,7 @@ export const EndpointList = () => {
   if (endpoints.data.length === 0) {
     return (
       <EmptyState
+        mt={64}
         title="No endpoints yet"
         description="Create one to turn a page into an API."
       />
@@ -133,28 +136,40 @@ export const EndpointList = () => {
               key={endpoint.id}
               value={endpoint.id}
             >
-              <Accordion.Control>
-                {/* `Accordion.Control` renders a button, so the label has to
-                    stay phrasing content: `span` keeps `Text` off its default
-                    `p`. */}
-                <Text
-                  span
-                  display="block"
-                  fz="sm"
-                  fw={500}
+              {/* The menu sits beside the control rather than inside it,
+                  since a button cannot contain another button. */}
+              <Group
+                gap={0}
+                wrap="nowrap"
+                pl="xs"
+              >
+                <EndpointActions endpoint={endpoint} />
+                <Accordion.Control
+                  miw={0}
+                  pl={6}
                 >
-                  {endpoint.name}
-                </Text>
-                <Text
-                  span
-                  display="block"
-                  fz="xs"
-                  c="dimmed"
-                  truncate
-                >
-                  {endpoint.url}
-                </Text>
-              </Accordion.Control>
+                  {/* `Accordion.Control` renders a button, so the label has to
+                      stay phrasing content: `span` keeps `Text` off its default
+                      `p`. */}
+                  <Text
+                    span
+                    display="block"
+                    fz="sm"
+                    fw={500}
+                  >
+                    {endpoint.name}
+                  </Text>
+                  <Text
+                    span
+                    display="block"
+                    fz="xs"
+                    c="dimmed"
+                    truncate
+                  >
+                    {endpoint.url}
+                  </Text>
+                </Accordion.Control>
+              </Group>
               <Accordion.Panel>
                 <EndpointDetails endpoint={endpoint} />
               </Accordion.Panel>

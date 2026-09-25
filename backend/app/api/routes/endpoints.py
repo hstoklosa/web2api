@@ -5,6 +5,7 @@ from app.models import Endpoint
 from app.schemas.endpoint import CreateEndpointRequest, EndpointResponse
 from app.schemas.extract import ExtractionSchema
 from app.services.endpoint_service import create_endpoint as create_endpoint_service
+from app.services.endpoint_service import delete_endpoint as delete_endpoint_service
 from app.services.endpoint_service import get_endpoint_by_id, get_endpoints_by_user
 from app.services.extraction_service import extract_data
 from app.services.scrape_service import fetch_clean_html
@@ -69,6 +70,18 @@ async def get_endpoint(
 ) -> EndpointResponse:
     endpoint = await get_endpoint_by_id(session, id, user.id)
     return to_response(endpoint)
+
+
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_endpoint(
+    id: UUID,
+    session: SessionDep,
+    user: CurrentUserDep,
+) -> None:
+    await delete_endpoint_service(session, id, user.id)
 
 
 @router.get(
