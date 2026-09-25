@@ -4,7 +4,11 @@ import { useNavigate } from "react-router";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
-import { registerInputSchema, useRegister, type RegisterInput } from "@/lib/auth";
+import {
+  registerInputSchema,
+  useRegister,
+  type RegisterInput,
+} from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/axios";
 
 // Confirm password is a UI-only check, so it lives here rather than in the

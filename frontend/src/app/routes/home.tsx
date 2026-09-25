@@ -222,9 +222,7 @@ const HomeRoute = () => {
       px="md"
       style={{ overflow: isDesktop ? "hidden" : "visible" }}
     >
-      <Head
-        description="Describe the data you want from any webpage in plain English and get back a stable JSON API."
-      />
+      <Head description="Describe the data you want from any webpage in plain English and get back a stable JSON API." />
       <Nav />
       <Flex
         flex={1}

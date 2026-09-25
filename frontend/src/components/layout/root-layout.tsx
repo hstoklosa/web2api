@@ -3,8 +3,14 @@ import { Outlet } from "react-router";
 
 const RootLayout = () => {
   return (
-    <Flex direction="column" mih="100vh">
-      <Box component="main" flex={1}>
+    <Flex
+      direction="column"
+      mih="100vh"
+    >
+      <Box
+        component="main"
+        flex={1}
+      >
         <Outlet />
       </Box>
     </Flex>

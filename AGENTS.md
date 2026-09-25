@@ -42,3 +42,4 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 
 - Backend, from `backend/`: `docker compose up -d postgres` once, then `uv run fastapi dev`.
 - Frontend, from `frontend/`: `npm run dev`, `npm run build`, `npm run lint`.
+- `npm run lint` also checks formatting against `frontend/.prettierrc.json`, so format with `npm run format` from `frontend/` rather than running Prettier with its defaults or on individual files.
