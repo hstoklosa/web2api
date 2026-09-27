@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     LLM_MODEL: str = "openrouter/free"
     DATABASE_URL: str
+    REDIS_URL: str = "redis://localhost:6379"
 
     SECRET_KEY: str
     ALGORITHM: str

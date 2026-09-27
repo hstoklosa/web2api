@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.core.rate_limit import rate_limit
 from app.deps import CurrentUserDep, SessionDep
 from app.models import Endpoint
 from app.schemas.endpoint import CreateEndpointRequest, EndpointResponse
@@ -9,9 +10,25 @@ from app.services.endpoint_service import delete_endpoint as delete_endpoint_ser
 from app.services.endpoint_service import get_endpoint_by_id, get_endpoints_by_user
 from app.services.extraction_service import extract_data
 from app.services.scrape_service import fetch_clean_html
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
 router = APIRouter(prefix="/endpoints", tags=["endpoints"])
+
+# Creating an endpoint fetches a page and calls the AI model, and reading its
+# data fetches the page again, so those get their own, tighter budgets.
+create_limit = Depends(
+    rate_limit(
+        "endpoint-create", "10/hour", "You've created too many endpoints recently"
+    )
+)
+data_limit = Depends(
+    rate_limit(
+        "endpoint-data", "60/minute", "You've requested endpoint data too often"
+    )
+)
+read_limit = Depends(
+    rate_limit("endpoint-read", "120/minute", "You've made too many requests")
+)
 
 
 def to_response(endpoint: Endpoint) -> EndpointResponse:
@@ -32,6 +49,7 @@ def to_response(endpoint: Endpoint) -> EndpointResponse:
     "",
     response_model=EndpointResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[create_limit],
 )
 async def create_endpoint(
     request: CreateEndpointRequest,
@@ -51,6 +69,7 @@ async def create_endpoint(
     "",
     response_model=list[EndpointResponse],
     status_code=status.HTTP_200_OK,
+    dependencies=[read_limit],
 )
 async def get_endpoints(
     session: SessionDep,
@@ -64,6 +83,7 @@ async def get_endpoints(
     "/{id}",
     response_model=EndpointResponse,
     status_code=status.HTTP_200_OK,
+    dependencies=[read_limit],
 )
 async def get_endpoint(
     id: UUID,
@@ -77,6 +97,7 @@ async def get_endpoint(
 @router.delete(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[read_limit],
 )
 async def delete_endpoint(
     id: UUID,
@@ -89,6 +110,7 @@ async def delete_endpoint(
 @router.get(
     "/{id}/data",
     status_code=status.HTTP_200_OK,
+    dependencies=[data_limit],
 )
 async def get_endpoint_data(
     id: UUID,

@@ -51,3 +51,11 @@ class FetchError(AppError):
 
 class FetchTimeoutError(FetchError):
     status_code = status.HTTP_504_GATEWAY_TIMEOUT
+
+
+class RateLimitedError(AppError):
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+
+    def __init__(self, message: str, retry_after: int) -> None:
+        super().__init__(message)
+        self.headers = {"Retry-After": str(retry_after)}

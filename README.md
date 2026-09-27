@@ -5,7 +5,7 @@ Turn any URL + plain description into a REST endpoint that returns structured JS
 ## Running locally
 
 You need Docker, [uv](https://docs.astral.sh/uv/) and Node.js.
-Postgres runs in Docker, while the backend and frontend run on your machine.
+Postgres and Redis run in Docker, while the backend and frontend run on your machine.
 
 ### Configuration
 
@@ -21,20 +21,21 @@ cp backend/.env.example backend/.env
 | `DATABASE_URL` | `postgresql+asyncpg://web2api:web2api@localhost:5432/web2api` for the Postgres in `docker-compose.yaml`. |
 | `SECRET_KEY` | A random string for signing session tokens, such as the output of `openssl rand -hex 32`. |
 
-The other variables have working defaults in the example file.
+`REDIS_URL` already points at the Redis in `docker-compose.yaml`, and the other variables have working defaults in the example file.
 
 ### Backend
 
 From `backend/`:
 
 ```sh
-docker compose up -d postgres
+docker compose up -d postgres redis
 uv run alembic upgrade head
 uv run fastapi dev
 ```
 
 The API runs at http://localhost:8000, with interactive docs at http://localhost:8000/docs.
 If port 5432 is taken, start Postgres with `POSTGRES_PORT=5433 docker compose up -d postgres` and change the port in `DATABASE_URL` to match.
+The same goes for Redis with `REDIS_PORT` and `REDIS_URL`.
 
 The app does not create tables itself, so run `uv run alembic upgrade head` again whenever you pull changes that add migrations.
 It only applies the migrations the database has not seen yet, so running it when nothing changed does nothing.
@@ -116,11 +117,26 @@ Building an endpoint asks the AI model for an extraction plan once.
 Each attempt may take up to 2 minutes, and timeouts, rate limits and provider errors are retried up to twice, but the whole step is cut off after 3 minutes.
 The plan's selectors are then checked against the fetched page, and the endpoint is only saved if every field matches something.
 
+### Rate limits
+
+Each user gets their own budget per group of routes, counted over a moving window.
+
+| Routes | Limit |
+| --- | --- |
+| `POST /v1/endpoints` | 10 per hour |
+| `GET /v1/endpoints/{id}/data` | 60 per minute |
+| `GET /v1/endpoints`, `GET /v1/endpoints/{id}`, `DELETE /v1/endpoints/{id}` | 120 per minute, shared |
+
+Going over a limit returns a 429 with a `Retry-After` header in seconds.
+The counters live in Redis, so they hold across workers and API restarts.
+If Redis refuses connections or takes over half a second to answer, requests are allowed through and the error is logged, so an outage never takes the API down.
+
 ### Errors
 
 | Status | Meaning |
 | --- | --- |
 | 422 | The URL points to a private or reserved address. |
+| 429 | You went over a rate limit. The `Retry-After` header says how many seconds to wait. |
 | 502 | The page could not be fetched: an error status, a connection, DNS or TLS failure, too many redirects, a redirect to a non-HTTP URL, a non-HTML response, or a response over 5 MB. |
 | 502 | The AI model could not be reached, failed, or returned an unusable plan, or its selectors found none of the requested data on the page. |
 | 503 | The AI model is rate limited. |

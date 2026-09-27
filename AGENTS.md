@@ -21,6 +21,7 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Protect routes with `CurrentUserDep`, and add third-party access as API keys accepted in `get_current_user` rather than by exposing the session cookies.
 - Scope every query for a user's resources by `user_id` in the service, including updates and deletes, and raise `NotFoundError` for rows the user does not own rather than a 403, so ids belonging to other users are indistinguishable from missing ones.
 - Fetch user-supplied URLs only through `fetch_html` in `app/services/scrape_service.py`, or through a client built on `PublicOnlyTransport` from `app/core/safe_http.py`, never with a plain httpx client, so every connection, including each redirect hop, is checked against private and reserved addresses.
+- Rate limit endpoint routes per user with a `rate_limit(scope, limit, message)` dependency from `app/core/rate_limit.py`, whose counters live in Redis, and give routes that should share a budget the same scope.
 - Translate infrastructure failures in the service into an `AppError` subclass from `app/core/exceptions.py`, which carries its own HTTP status and headers for the single handler in `app/core/error_handlers.py`, so no upstream error reaches the client as a bare 500.
 - Write `AppError` messages for end users, since the frontend shows `detail` verbatim, and log the technical cause instead.
 - The API registers no CORS middleware, since the Vite dev proxy keeps browser requests same-origin, so a split-origin deployment has to add `CORSMiddleware`, switch the cookies to SameSite=None with CSRF protection, and set `withCredentials` on `apiClient`.
@@ -47,7 +48,7 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 
 ## Commands
 
-- Backend, from `backend/`: `docker compose up -d postgres` once, then `uv run alembic upgrade head` after every pull that adds migrations, then `uv run fastapi dev`.
+- Backend, from `backend/`: `docker compose up -d postgres redis` once, then `uv run alembic upgrade head` after every pull that adds migrations, then `uv run fastapi dev`.
 - New migration, from `backend/`: `uv run alembic revision --autogenerate -m "<what changed>"`, then `uv run alembic upgrade head`.
 - Schema drift check, from `backend/`: `uv run alembic check` fails if the models and the migrations disagree.
 - Backend tests, from `backend/`: `uv run pytest`.
