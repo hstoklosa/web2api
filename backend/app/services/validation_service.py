@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from soupsieve.util import SelectorSyntaxError
 
 from app.core.exceptions import SchemaValidationError
+from app.core.processes import run_in_process
 from app.schemas.extract import ExtractionSchema
 from app.services.extraction_service import resolve_element
 
@@ -46,27 +47,22 @@ def _validate_structure(schema: ExtractionSchema) -> list[str]:
     return issues
 
 
-def _validate_matches_html(
-    html: str, schema: ExtractionSchema, issues: list[str]
-) -> None:
+def _find_html_mismatches(html: str, schema: ExtractionSchema) -> list[str]:
     soup = BeautifulSoup(html, "html.parser")
     items = soup.select(schema.item_selector) if schema.item_selector else [soup]
 
     if schema.item_selector and not items:
-        issues.append(
-            f"item_selector {schema.item_selector!r} does not match any element"
-        )
-        return
+        return [f"item_selector {schema.item_selector!r} does not match any element"]
 
-    for field in schema.fields:
-        if not any(resolve_element(item, field) is not None for item in items):
-            issues.append(
-                f"field {field.name!r} selector {field.selector!r} does not match any "
-                "element in the fetched page"
-            )
+    return [
+        f"field {field.name!r} selector {field.selector!r} does not match any "
+        "element in the fetched page"
+        for field in schema.fields
+        if not any(resolve_element(item, field) is not None for item in items)
+    ]
 
 
-def validate_schema(html: str, schema: ExtractionSchema) -> None:
+async def validate_schema(html: str, schema: ExtractionSchema) -> None:
     # The issues describe selectors, which mean nothing to end users, so they
     # are only logged.
     if not schema.fields:
@@ -78,7 +74,7 @@ def validate_schema(html: str, schema: ExtractionSchema) -> None:
         logger.warning("Generated schema is invalid: %s", "; ".join(issues))
         raise SchemaValidationError("The AI model returned an invalid plan")
 
-    _validate_matches_html(html, schema, issues)
+    issues = await run_in_process(_find_html_mismatches, html, schema)
     if issues:
         logger.warning(
             "Generated schema does not match the page: %s", "; ".join(issues)

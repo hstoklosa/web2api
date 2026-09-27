@@ -4,6 +4,8 @@ from app.core.exceptions import SchemaValidationError
 from app.schemas.extract import ExtractionSchema
 from app.services.validation_service import validate_schema
 
+pytestmark = pytest.mark.anyio
+
 HTML = "<ul><li><a href='/a'>A</a></li><li><a href='/b'>B</a></li></ul>"
 
 
@@ -13,8 +15,8 @@ def schema(fields: list[dict], item_selector: str | None = None) -> ExtractionSc
     )
 
 
-def test_accepts_matching_schema() -> None:
-    validate_schema(HTML, schema([{"name": "title", "selector": "a"}], "li"))
+async def test_accepts_matching_schema() -> None:
+    await validate_schema(HTML, schema([{"name": "title", "selector": "a"}], "li"))
 
 
 @pytest.mark.parametrize(
@@ -33,6 +35,8 @@ def test_accepts_matching_schema() -> None:
         ),
     ],
 )
-def test_rejects_unusable_schema(extraction: ExtractionSchema, message: str) -> None:
+async def test_rejects_unusable_schema(
+    extraction: ExtractionSchema, message: str
+) -> None:
     with pytest.raises(SchemaValidationError, match=message):
-        validate_schema(HTML, extraction)
+        await validate_schema(HTML, extraction)

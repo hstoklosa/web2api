@@ -5,6 +5,7 @@ import httpx
 from bs4 import BeautifulSoup, Comment
 
 from app.core.exceptions import FetchError, FetchTimeoutError
+from app.core.processes import run_in_process
 from app.core.safe_http import PublicOnlyTransport
 
 MAX_RESPONSE_BYTES = 5 * 1024 * 1024
@@ -133,4 +134,4 @@ async def fetch_html(
 
 async def fetch_clean_html(url: str) -> str:
     raw_html = await fetch_html(url)
-    return clean_html(raw_html)
+    return await run_in_process(clean_html, raw_html)

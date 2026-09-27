@@ -8,8 +8,9 @@ from app.schemas.extract import ExtractionSchema
 from app.services.endpoint_service import create_endpoint as create_endpoint_service
 from app.services.endpoint_service import delete_endpoint as delete_endpoint_service
 from app.services.endpoint_service import get_endpoint_by_id, get_endpoints_by_user
-from app.services.extraction_service import extract_data
-from app.services.scrape_service import fetch_clean_html
+from app.services.endpoint_service import (
+    get_endpoint_data as get_endpoint_data_service,
+)
 from fastapi import APIRouter, Depends, status
 
 router = APIRouter(prefix="/endpoints", tags=["endpoints"])
@@ -117,9 +118,4 @@ async def get_endpoint_data(
     session: SessionDep,
     user: CurrentUserDep,
 ) -> dict[str, object] | list[dict[str, object]]:
-    endpoint = await get_endpoint_by_id(session, id, user.id)
-    html = await fetch_clean_html(endpoint.url)
-    data = extract_data(
-        html, ExtractionSchema.model_validate(endpoint.extraction_schema)
-    )
-    return data
+    return await get_endpoint_data_service(session, id, user.id)

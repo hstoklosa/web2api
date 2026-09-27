@@ -1,7 +1,10 @@
+import os
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
+import anyio
+import anyio.to_thread
 import jwt
 from pwdlib import PasswordHash
 
@@ -19,12 +22,30 @@ ACCESS_COOKIE_NAME = "access_token"
 REFRESH_COOKIE_NAME = "refresh_token"
 
 
-def hash_password(password: str) -> str:
-    return password_hash.hash(password)
+# Argon2 takes tens of milliseconds of CPU per call, which would stall every
+# other request if it ran on the event loop, so it runs in worker threads.
+# Each call already spreads over 4 lanes and allocates 64 MiB, so a burst of
+# logins beyond one call per 4 CPUs only adds memory without adding throughput.
+# The dedicated limiter makes that burst queue here rather than take the
+# threads FastAPI shares with sync dependencies.
+password_hash_limiter = anyio.CapacityLimiter(
+    max(1, (os.process_cpu_count() or 1) // 4)
+)
 
 
-def verify_password(password: str, hashed_password: str) -> bool:
-    return password_hash.verify(password, hashed_password)
+async def hash_password(password: str) -> str:
+    return await anyio.to_thread.run_sync(
+        password_hash.hash, password, limiter=password_hash_limiter
+    )
+
+
+async def verify_password(password: str, hashed_password: str) -> bool:
+    return await anyio.to_thread.run_sync(
+        password_hash.verify,
+        password,
+        hashed_password,
+        limiter=password_hash_limiter,
+    )
 
 
 def _create_token(

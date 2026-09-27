@@ -5,7 +5,10 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
+from app.core.processes import run_in_process
 from app.models import Endpoint
+from app.schemas.extract import ExtractionSchema
+from app.services.extraction_service import extract_data
 from app.services.schema_service import (
     generate_endpoint_plan,
 )
@@ -22,7 +25,7 @@ async def create_endpoint(
     html = await fetch_clean_html(url)
     plan = await generate_endpoint_plan(html, prompt)
 
-    validate_schema(html, plan.extraction)
+    await validate_schema(html, plan.extraction)
 
     endpoint = Endpoint(
         user_id=user_id,
@@ -50,6 +53,17 @@ async def get_endpoint_by_id(
     if not endpoint:
         raise NotFoundError("Endpoint not found")
     return endpoint
+
+
+async def get_endpoint_data(
+    session: AsyncSession,
+    id: UUID,
+    user_id: int,
+) -> dict[str, object] | list[dict[str, object]]:
+    endpoint = await get_endpoint_by_id(session, id, user_id)
+    html = await fetch_clean_html(endpoint.url)
+    extraction = ExtractionSchema.model_validate(endpoint.extraction_schema)
+    return await run_in_process(extract_data, html, extraction)
 
 
 async def get_endpoints_by_user(
