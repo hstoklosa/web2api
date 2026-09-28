@@ -29,6 +29,13 @@ def test_keeps_whitespace_in_passwords() -> None:
     assert request.password == "  spaced out  "
 
 
+@pytest.mark.parametrize("model", [RegisterUserRequest, LoginUserRequest])
+def test_lowercases_the_email(model: type) -> None:
+    request = model(email="Foo.Bar@Example.COM", password="p" * 8)
+
+    assert request.email == "foo.bar@example.com"
+
+
 def test_accepts_a_url_at_the_cap() -> None:
     url = URL + "a" * (2048 - len(URL))
 
