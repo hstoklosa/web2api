@@ -21,6 +21,14 @@ dependencies = [
 [tool.fastapi]
 entrypoint = "app.main:app"
 
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "UP", "SIM",
+    "ASYNC", "FAST", "RUF",
+    "DTZ", "T20",
+]
+ignore = ["E501"]  # the formatter owns line length
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
@@ -28,4 +36,5 @@ pythonpath = ["."]
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "ruff>=0.16.9",
 ]

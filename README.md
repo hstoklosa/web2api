@@ -71,6 +71,7 @@ Then apply it with `uv run alembic upgrade head`, and commit it together with th
 ### Tests and lint
 
 - Backend tests, from `backend/`: `uv run pytest`.
+- Backend lint and formatting, from `backend/`: `uv run ruff check --fix` and `uv run ruff format`, configured in `backend/pyproject.toml`.
 - Frontend lint and formatting, from `frontend/`: `npm run lint`, with `npm run format` to fix formatting.
 
 ## Calling the API

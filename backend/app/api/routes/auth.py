@@ -1,6 +1,8 @@
 from datetime import timedelta
 from typing import Annotated, Any
 
+from fastapi import APIRouter, Cookie, Response, status
+
 from app.core.config import settings
 from app.core.exceptions import AuthenticationError
 from app.core.security import (
@@ -17,7 +19,6 @@ from app.services.user_service import (
     create_user,
     get_user_from_token,
 )
-from fastapi import APIRouter, Cookie, Response, status
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

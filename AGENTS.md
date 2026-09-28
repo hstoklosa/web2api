@@ -55,6 +55,6 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - New migration, from `backend/`: `uv run alembic revision --autogenerate -m "<what changed>"`, then `uv run alembic upgrade head`.
 - Schema drift check, from `backend/`: `uv run alembic check` fails if the models and the migrations disagree.
 - Backend tests, from `backend/`: `uv run pytest`.
-- Backend lint and formatting, from `backend/`: `uvx ruff check app tests` and `uvx ruff format app tests`.
+- Backend lint and formatting, from `backend/`: `uv run ruff check --fix` and `uv run ruff format`.
 - Frontend, from `frontend/`: `npm run dev`, `npm run build`, `npm run lint`.
 - `npm run lint` also checks formatting against `frontend/.prettierrc.json`, so format with `npm run format` from `frontend/` rather than running Prettier with its defaults or on individual files.

@@ -41,7 +41,7 @@ class PublicOnlyBackend(httpcore.AsyncNetworkBackend):
         self,
         host: str,
         port: int,
-        timeout: float | None = None,
+        timeout: float | None = None,  # noqa: ASYNC109 - httpcore's interface
         local_address: str | None = None,
         socket_options: Iterable[httpcore.SOCKET_OPTION] | None = None,
     ) -> httpcore.AsyncNetworkStream:
@@ -80,7 +80,7 @@ class PublicOnlyBackend(httpcore.AsyncNetworkBackend):
     async def connect_unix_socket(
         self,
         path: str,
-        timeout: float | None = None,
+        timeout: float | None = None,  # noqa: ASYNC109 - httpcore's interface
         socket_options: Iterable[httpcore.SOCKET_OPTION] | None = None,
     ) -> httpcore.AsyncNetworkStream:
         raise BlockedURLError("Unix sockets are not allowed")

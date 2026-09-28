@@ -50,10 +50,7 @@ def _coerce(value: str | None, type_: str) -> object:
 
 
 def resolve_element(item: Tag, field: ExtractionSchemaField) -> Tag | None:
-    if field.relative_to == "next_sibling":
-        context = item.find_next_sibling()
-    else:
-        context = item
+    context = item.find_next_sibling() if field.relative_to == "next_sibling" else item
 
     return context.select_one(field.selector) if context is not None else None
 

@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, status
+
 from app.core.rate_limit import rate_limit
 from app.deps import CurrentUserDep, SessionDep
 from app.models import Endpoint
@@ -11,7 +13,6 @@ from app.services.endpoint_service import get_endpoint_by_id, get_endpoints_by_u
 from app.services.endpoint_service import (
     get_endpoint_data as get_endpoint_data_service,
 )
-from fastapi import APIRouter, Depends, status
 
 router = APIRouter(prefix="/endpoints", tags=["endpoints"])
 
@@ -23,9 +24,7 @@ create_limit = Depends(
     )
 )
 data_limit = Depends(
-    rate_limit(
-        "endpoint-data", "60/minute", "You've requested endpoint data too often"
-    )
+    rate_limit("endpoint-data", "60/minute", "You've requested endpoint data too often")
 )
 read_limit = Depends(
     rate_limit("endpoint-read", "120/minute", "You've made too many requests")

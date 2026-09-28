@@ -105,19 +105,21 @@ async def fetch_html(
         # The read timeout applies per chunk, so this also bounds servers that
         # trickle the body out slowly.
         async with asyncio.timeout(TOTAL_TIMEOUT_SECONDS):
-            async with httpx.AsyncClient(
-                transport=transport or PublicOnlyTransport(),
-                headers=REQUEST_HEADERS,
-                timeout=REQUEST_TIMEOUT,
-                follow_redirects=True,
-                max_redirects=MAX_REDIRECTS,
-                trust_env=False,
-            ) as client:
-                async with client.stream("GET", url) as response:
-                    response.raise_for_status()
-                    _check_content_type(response)
-                    body = await _read_limited(response)
-                    return _decode(body, response.charset_encoding)
+            async with (
+                httpx.AsyncClient(
+                    transport=transport or PublicOnlyTransport(),
+                    headers=REQUEST_HEADERS,
+                    timeout=REQUEST_TIMEOUT,
+                    follow_redirects=True,
+                    max_redirects=MAX_REDIRECTS,
+                    trust_env=False,
+                ) as client,
+                client.stream("GET", url) as response,
+            ):
+                response.raise_for_status()
+                _check_content_type(response)
+                body = await _read_limited(response)
+                return _decode(body, response.charset_encoding)
     except (TimeoutError, httpx.TimeoutException) as exc:
         raise FetchTimeoutError("The page took too long to respond") from exc
     except httpx.HTTPStatusError as exc:
