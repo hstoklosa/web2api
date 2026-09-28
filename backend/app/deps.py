@@ -28,7 +28,12 @@ ApiKeyDep = Annotated[HTTPAuthorizationCredentials | None, Depends(api_key_schem
 async def _get_user_from_cookie(token: str | None, session: AsyncSession) -> User:
     if token is None:
         raise AuthenticationError("Not authenticated")
-    return await get_user_from_token(session, token, TokenType.ACCESS)
+    user = await get_user_from_token(session, token, TokenType.ACCESS)
+    # End the lookup's transaction, which returns the connection to the pool,
+    # so a route that goes on to fetch a page or call the AI model does not
+    # hold it for minutes. get_user_from_api_key commits for the same reason.
+    await session.commit()
+    return user
 
 
 async def get_session_user(

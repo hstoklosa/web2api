@@ -61,6 +61,9 @@ async def get_endpoint_data(
     user_id: int,
 ) -> dict[str, object] | list[dict[str, object]]:
     endpoint = await get_endpoint_by_id(session, id, user_id)
+    # Return the connection to the pool before the fetch, which can take many
+    # seconds.
+    await session.commit()
     html = await fetch_clean_html(endpoint.url)
     extraction = ExtractionSchema.model_validate(endpoint.extraction_schema)
     return await run_in_process(extract_data, html, extraction)

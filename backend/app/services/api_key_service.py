@@ -105,6 +105,8 @@ async def get_user_from_api_key(session: AsyncSession, key: str) -> User:
         )
         .values(last_used_at=now)
     )
+    # Committing also returns the connection to the pool before the route
+    # does any slow work.
     await session.commit()
 
     return user

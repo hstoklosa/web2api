@@ -17,6 +17,11 @@ API_KEY_USER = SimpleNamespace(id=1)
 SESSION_USER = SimpleNamespace(id=2)
 
 
+class StubSession:
+    async def commit(self) -> None:
+        pass
+
+
 @pytest.fixture(autouse=True)
 def fake_auth(monkeypatch: pytest.MonkeyPatch) -> None:
     async def from_api_key(session: object, key: str) -> SimpleNamespace:
@@ -40,7 +45,7 @@ def make_client(
 ) -> httpx.AsyncClient:
     app = FastAPI()
     register_exception_handlers(app)
-    app.dependency_overrides[get_db] = lambda: None
+    app.dependency_overrides[get_db] = StubSession
 
     @app.get("/any")
     async def any_auth(user: CurrentUserDep) -> int:

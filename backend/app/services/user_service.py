@@ -18,9 +18,9 @@ async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
 
 
 async def create_user(session: AsyncSession, email: str, password: str) -> User:
-    if await get_user_by_email(session, email) is not None:
-        raise ConflictError("A user with this email already exists")
-
+    # Hash before touching the database, since hashing can wait in a queue
+    # behind other logins, and a transaction open meanwhile would hold a pooled
+    # connection. The unique index on email catches duplicates.
     user = User(email=email, hashed_password=await hash_password(password))
     session.add(user)
 
@@ -36,6 +36,9 @@ async def create_user(session: AsyncSession, email: str, password: str) -> User:
 
 async def authenticate_user(session: AsyncSession, email: str, password: str) -> User:
     user = await get_user_by_email(session, email)
+    # Return the connection to the pool before verifying, which can wait in a
+    # queue behind other logins.
+    await session.commit()
     if user is None or not await verify_password(password, user.hashed_password):
         raise AuthenticationError("Incorrect email or password")
     return user
