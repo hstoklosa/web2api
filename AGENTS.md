@@ -18,7 +18,9 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Generate each migration with `--autogenerate`, then review it before committing, since autogenerate turns renames into a drop plus an add and needs a `server_default` or backfill for new non-null columns on existing rows.
 - Commit each migration together with the model change it belongs to.
 - Authenticate browser sessions with httpOnly, SameSite=strict cookies: `access_token` scoped to `/v1` and `refresh_token` scoped to `/v1/auth`, and never return tokens in response bodies.
-- Protect routes with `CurrentUserDep`, and add third-party access as API keys accepted in `get_current_user` rather than by exposing the session cookies.
+- Protect routes with `CurrentUserDep`, which accepts an API key in `Authorization: Bearer w2a_...` or else the session cookie, and give third parties API keys rather than the session cookies.
+- Protect routes a leaked API key must not reach, such as managing API keys, with `SessionUserDep`, which accepts the session cookie only.
+- Never store or log an API key in plaintext, and return it only in the create response.
 - Scope every query for a user's resources by `user_id` in the service, including updates and deletes, and raise `NotFoundError` for rows the user does not own rather than a 403, so ids belonging to other users are indistinguishable from missing ones.
 - Fetch user-supplied URLs only through `fetch_html` in `app/services/scrape_service.py`, or through a client built on `PublicOnlyTransport` from `app/core/safe_http.py`, never with a plain httpx client, so every connection, including each redirect hop, is checked against private and reserved addresses.
 - Rate limit endpoint routes per user with a `rate_limit(scope, limit, message)` dependency from `app/core/rate_limit.py`, whose counters live in Redis, and give routes that should share a budget the same scope.
@@ -45,6 +47,7 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - Pair each endpoint with its zod schemas and TanStack Query hook in one feature module, parsing the response rather than casting it.
 - Keep the query cache in sync inside each mutation hook, so every caller gets consistent data, and leave `onSuccess` for caller concerns such as closing a modal or navigating.
 - Share one zod schema per payload between form validation, via `schemaResolver` from `@mantine/form`, and the request it feeds.
+- Keep secrets the backend returns only once, such as a new API key, in component state and never in the query cache, so they are gone once the view that shows them closes.
 
 ## Commands
 
@@ -52,5 +55,6 @@ web2api is a web app that turns a URL plus a plain-English description of the de
 - New migration, from `backend/`: `uv run alembic revision --autogenerate -m "<what changed>"`, then `uv run alembic upgrade head`.
 - Schema drift check, from `backend/`: `uv run alembic check` fails if the models and the migrations disagree.
 - Backend tests, from `backend/`: `uv run pytest`.
+- Backend lint and formatting, from `backend/`: `uvx ruff check app tests` and `uvx ruff format app tests`.
 - Frontend, from `frontend/`: `npm run dev`, `npm run build`, `npm run lint`.
 - `npm run lint` also checks formatting against `frontend/.prettierrc.json`, so format with `npm run format` from `frontend/` rather than running Prettier with its defaults or on individual files.

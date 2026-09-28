@@ -22,7 +22,10 @@ class ConflictError(AppError):
 
 class AuthenticationError(AppError):
     status_code = status.HTTP_401_UNAUTHORIZED
-    headers = {"WWW-Authenticate": "Bearer"}
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.headers = {"WWW-Authenticate": "Bearer"}
 
 
 class SchemaGenerationError(AppError):

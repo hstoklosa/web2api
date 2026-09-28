@@ -73,6 +73,22 @@ Then apply it with `uv run alembic upgrade head`, and commit it together with th
 - Backend tests, from `backend/`: `uv run pytest`.
 - Frontend lint and formatting, from `frontend/`: `npm run lint`, with `npm run format` to fix formatting.
 
+## Calling the API
+
+The app signs you in with cookies, which only a browser sends.
+To call the API from a script or a server, create an API key on the API keys page and send it as a Bearer token:
+
+```sh
+curl http://localhost:8000/v1/endpoints/<endpoint id>/data \
+  -H "Authorization: Bearer w2a_..."
+```
+
+A key acts as the user who created it, on every route except managing API keys, which only a signed-in browser can do.
+That way a leaked key can't create more keys or revoke the others, so you can always revoke it from the app.
+The key is shown once when you create it, and the server only keeps its SHA-256 hash.
+Each user can have up to 25 keys, and the API keys page shows when each one was last used, to the minute.
+A request that sends a key is judged on the key alone, so a wrong or revoked key returns a 401 even alongside a valid session cookie.
+
 ## Architecture
 
 ## Limits and safety
@@ -120,12 +136,14 @@ The plan's selectors are then checked against the fetched page, and the endpoint
 ### Rate limits
 
 Each user gets their own budget per group of routes, counted over a moving window.
+Requests made with an API key count against the budget of the user who owns it, the same as requests from the app.
 
 | Routes | Limit |
 | --- | --- |
 | `POST /v1/endpoints` | 10 per hour |
 | `GET /v1/endpoints/{id}/data` | 60 per minute |
 | `GET /v1/endpoints`, `GET /v1/endpoints/{id}`, `DELETE /v1/endpoints/{id}` | 120 per minute, shared |
+| `POST /v1/api-keys` | 20 per hour |
 
 Going over a limit returns a 429 with a `Retry-After` header in seconds.
 The counters live in Redis, so they hold across workers and API restarts.
@@ -135,6 +153,7 @@ If Redis refuses connections or takes over half a second to answer, requests are
 
 | Status | Meaning |
 | --- | --- |
+| 401 | You are not signed in, or the API key is wrong or revoked. |
 | 422 | The URL points to a private or reserved address. |
 | 429 | You went over a rate limit. The `Retry-After` header says how many seconds to wait. |
 | 502 | The page could not be fetched: an error status, a connection, DNS or TLS failure, too many redirects, a redirect to a non-HTTP URL, a non-HTML response, or a response over 5 MB. |

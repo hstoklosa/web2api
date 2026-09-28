@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 
 const requestSnippet = `curl -X GET \\
   /v1/endpoints/dba9303c-fd9d-4982-bafd-05e7d872a722/data \\
-  -H "Authorization: Bearer <token>"`;
+  -H "Authorization: Bearer w2a_..."`;
 
 const responseSnippet = `[
   {

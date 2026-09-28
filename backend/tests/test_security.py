@@ -5,11 +5,17 @@ import anyio
 import pytest
 
 from app.core import security
-from app.core.security import hash_password, password_hash_limiter, verify_password
+from app.core.security import (
+    API_KEY_PREFIX,
+    generate_api_key,
+    hash_api_key,
+    hash_password,
+    password_hash_limiter,
+    verify_password,
+)
 
-pytestmark = pytest.mark.anyio
 
-
+@pytest.mark.anyio
 async def test_verifies_the_password_it_hashed() -> None:
     hashed = await hash_password("correct horse battery")
 
@@ -17,6 +23,7 @@ async def test_verifies_the_password_it_hashed() -> None:
     assert not await verify_password("wrong password", hashed)
 
 
+@pytest.mark.anyio
 async def test_hashes_off_the_event_loop_thread(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -34,6 +41,7 @@ async def test_hashes_off_the_event_loop_thread(
     assert threads[0] is not threading.current_thread()
 
 
+@pytest.mark.anyio
 async def test_caps_concurrent_hashes_at_the_limiter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -58,3 +66,18 @@ async def test_caps_concurrent_hashes_at_the_limiter(
             tg.start_soon(verify_password, "pw", "hashed")
 
     assert peak == password_hash_limiter.total_tokens
+
+
+def test_generates_distinct_prefixed_api_keys() -> None:
+    keys = {generate_api_key() for _ in range(100)}
+
+    assert len(keys) == 100
+    assert all(key.startswith(API_KEY_PREFIX) for key in keys)
+
+
+def test_hashes_api_keys_deterministically() -> None:
+    key = generate_api_key()
+
+    assert hash_api_key(key) == hash_api_key(key)
+    assert hash_api_key(key) != hash_api_key(generate_api_key())
+    assert key not in hash_api_key(key)

@@ -4,6 +4,7 @@ import { RouterProvider } from "react-router/dom";
 import AppLayout from "@/components/layout/app-layout";
 import RootLayout from "@/components/layout/root-layout";
 import { requireAuth, requireGuest } from "./middleware/auth-guards";
+import ApiKeysRoute from "./routes/api-keys";
 import DashboardRoute from "./routes/dashboard";
 import HomeRoute from "./routes/home";
 import LoginRoute from "./routes/login";
@@ -25,7 +26,10 @@ const router = createBrowserRouter([
       {
         Component: AppLayout,
         middleware: [requireAuth],
-        children: [{ path: "dashboard", Component: DashboardRoute }],
+        children: [
+          { path: "dashboard", Component: DashboardRoute },
+          { path: "api-keys", Component: ApiKeysRoute },
+        ],
       },
     ],
   },

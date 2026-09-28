@@ -1,4 +1,6 @@
+import hashlib
 import os
+import secrets
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
@@ -90,3 +92,21 @@ def decode_token(token: str, expected_type: TokenType) -> dict[str, Any]:
     if payload["type"] != expected_type:
         raise jwt.InvalidTokenError("Unexpected token type")
     return payload
+
+
+# Keys carry a recognisable prefix so secret scanners and people can spot a
+# leaked one.
+API_KEY_PREFIX = "w2a_"
+# How much of a key is stored in the clear, so the user can tell keys apart.
+API_KEY_DISPLAY_LENGTH = len(API_KEY_PREFIX) + 8
+
+
+def generate_api_key() -> str:
+    return API_KEY_PREFIX + secrets.token_urlsafe(32)
+
+
+def hash_api_key(key: str) -> str:
+    # A key is 256 random bits, so unlike a password it cannot be guessed, and
+    # a fast hash is enough. It also runs on every API request, where argon2
+    # would cost tens of milliseconds of CPU each time.
+    return hashlib.sha256(key.encode()).hexdigest()

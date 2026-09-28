@@ -1,5 +1,6 @@
-import { Alert, Badge, Group, Paper, Stack, Text } from "@mantine/core";
+import { Alert, Anchor, Badge, Group, Paper, Stack, Text } from "@mantine/core";
 import { Send } from "lucide-react";
+import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { JsonViewer } from "@/components/ui/json-viewer";
@@ -34,7 +35,11 @@ export const EndpointDetails = ({ endpoint }: EndpointDetailsProps) => {
   // Each request scrapes the live page, so wait for the user to send one.
   const endpointData = useEndpointData(endpoint.id, { enabled: false });
 
-  const requestPath = `${apiClient.defaults.baseURL}${getEndpointDataPath(endpoint.id)}`;
+  // Absolute, so it can be pasted straight into curl or a script.
+  const requestUrl = new URL(
+    `${apiClient.defaults.baseURL}${getEndpointDataPath(endpoint.id)}`,
+    window.location.origin,
+  ).href;
 
   return (
     <Stack gap="md">
@@ -69,9 +74,9 @@ export const EndpointDetails = ({ endpoint }: EndpointDetailsProps) => {
             ff="monospace"
             fz="xs"
             truncate
-            title={requestPath}
+            title={requestUrl}
           >
-            {requestPath}
+            {requestUrl}
           </Text>
           <Button
             size="xs"
@@ -84,6 +89,22 @@ export const EndpointDetails = ({ endpoint }: EndpointDetailsProps) => {
           </Button>
         </Group>
       </Paper>
+      <Text
+        fz="xs"
+        c="dimmed"
+        mt={-8}
+      >
+        Call it from anywhere by sending an{" "}
+        <Anchor
+          component={Link}
+          to="/api-keys"
+          inherit
+          underline="always"
+        >
+          API key
+        </Anchor>{" "}
+        as a Bearer token.
+      </Text>
 
       <Stack gap={6}>
         <SectionLabel>Response format</SectionLabel>

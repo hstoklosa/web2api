@@ -15,6 +15,7 @@ from app.deps import CurrentUserDep
 
 logger = logging.getLogger(__name__)
 
+
 def create_limiter(redis_url: str) -> MovingWindowRateLimiter:
     """Build a limiter whose counters live in Redis, so every worker and
     instance shares them.
