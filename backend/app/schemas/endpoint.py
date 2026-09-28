@@ -1,12 +1,18 @@
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, StringConstraints, UrlConstraints
+
+EndpointUrl = Annotated[HttpUrl, UrlConstraints(max_length=2048)]
+EndpointDescription = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)
+]
 
 
 class CreateEndpointRequest(BaseModel):
-    url: HttpUrl
-    description: str = Field(min_length=1)
+    url: EndpointUrl
+    description: EndpointDescription
 
 
 class EndpointResponse(BaseModel):

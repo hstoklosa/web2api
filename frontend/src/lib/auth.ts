@@ -60,9 +60,17 @@ const startSession = (queryClient: QueryClient, user: User): void => {
   queryClient.setQueryData(userQueryKey, user);
 };
 
+// Matches the backend cap, which is the same for login and register so no
+// password that registers can fail to log in.
+const PASSWORD_MAX_LENGTH = 128;
+const passwordTooLong = `Password must be at most ${PASSWORD_MAX_LENGTH} characters long`;
+
 export const loginInputSchema = z.object({
   email: z.email("Enter a valid email address"),
-  password: z.string().min(1, "Enter your password"),
+  password: z
+    .string()
+    .min(1, "Enter your password")
+    .max(PASSWORD_MAX_LENGTH, passwordTooLong),
 });
 
 export type LoginInput = z.infer<typeof loginInputSchema>;
@@ -92,7 +100,10 @@ export const useLogin = (options?: UseLoginOptions) => {
 
 export const registerInputSchema = z.object({
   email: z.email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .max(PASSWORD_MAX_LENGTH, passwordTooLong),
 });
 
 export type RegisterInput = z.infer<typeof registerInputSchema>;

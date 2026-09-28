@@ -11,8 +11,14 @@ import { endpointSchema, type Endpoint } from "./endpoint";
 import { endpointsQueryKey } from "./get-endpoints";
 
 export const createEndpointInputSchema = z.object({
-  url: z.url("Enter a valid URL"),
-  description: z.string().min(1, "Describe the data you want to extract"),
+  url: z
+    .url("Enter a valid URL")
+    .max(2048, "Keep the URL under 2048 characters"),
+  description: z
+    .string()
+    .trim()
+    .min(1, "Describe the data you want to extract")
+    .max(1000, "Keep the description under 1000 characters"),
 });
 
 export type CreateEndpointInput = z.infer<typeof createEndpointInputSchema>;
