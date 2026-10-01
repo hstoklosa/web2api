@@ -1,6 +1,77 @@
 # web2api
 
-Turn any URL + plain description into a REST endpoint that returns structured JSON data.
+Turn any URL plus a plain-English description into a REST endpoint that returns structured JSON.
+
+Give web2api a page such as `https://news.ycombinator.com/` and ask for "titles and urls of the top stories".
+An LLM reads the page once, infers a JSON schema and writes CSS selectors for it, and web2api saves that as a recipe.
+From then on, every call to the endpoint fetches the live page and runs the selectors, with no further model calls, so responses are fast, cheap and deterministic.
+
+## Features
+
+- **Endpoints from a sentence.** Describe the data you want, and get back a named endpoint with a JSON schema, either a single object or a list of records.
+- **Typed output.** Fields are typed as strings, integers, numbers or booleans, and values such as `$1,299.00` or `In Stock` are coerced to match.
+- **Verified before saving.** Every generated selector is checked against the real page, so an endpoint is only created if it actually finds the data.
+- **API keys.** Call your endpoints from scripts and servers with revocable, hashed API keys, while the browser app uses httpOnly cookie sessions.
+- **Safe by default.** Server-side fetches are locked to the public internet on every connection and redirect, with size, time and per-user rate limits.
+
+## Example
+
+Create an endpoint:
+
+```sh
+curl http://localhost:8000/v1/endpoints \
+  -H "Authorization: Bearer w2a_..." \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://news.ycombinator.com/", "description": "titles and urls of the top stories"}'
+```
+
+web2api names and describes the endpoint and returns the schema it inferred:
+
+```json
+{
+  "id": "3f0c7b9e-...",
+  "name": "hn_top_stories",
+  "url": "https://news.ycombinator.com/",
+  "description": "Returns a list of the top stories on the Hacker News front page, each with a title and url.",
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string" }
+      }
+    }
+  },
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
+Then call it whenever you need fresh data:
+
+```sh
+curl http://localhost:8000/v1/endpoints/3f0c7b9e-.../data \
+  -H "Authorization: Bearer w2a_..."
+```
+
+```json
+[
+  { "title": "Show HN: ...", "url": "https://example.com/..." },
+  { "title": "...", "url": "https://..." }
+]
+```
+
+## Tech stack
+
+| Layer | Tools |
+| --- | --- |
+| Backend | Python 3.14, FastAPI, SQLAlchemy 2 (async) with asyncpg, Alembic, Pydantic, httpx, BeautifulSoup |
+| AI | OpenAI SDK with structured outputs, pointed at OpenRouter by default, so any compatible model works |
+| Data | PostgreSQL 17 with JSONB for recipes, Redis 8 for rate limit counters |
+| Auth | JWT access and refresh tokens in httpOnly cookies, Argon2 password hashing, SHA-256 hashed API keys |
+| Frontend | React 19, TypeScript, Vite, Mantine, React Router, TanStack Query, axios, zod |
+| Tooling | uv, Ruff, pytest, ESLint, Prettier, Docker Compose |
 
 ## Running locally
 
@@ -90,7 +161,98 @@ The key is shown once when you create it, and the server only keeps its SHA-256 
 Each user can have up to 25 keys, and the API keys page shows when each one was last used, to the minute.
 A request that sends a key is judged on the key alone, so a wrong or revoked key returns a 401 even alongside a valid session cookie.
 
+### Routes
+
+All routes live under `/v1`, and interactive docs are at `/docs`.
+
+| Route | Purpose |
+| --- | --- |
+| `POST /v1/auth/register`, `POST /v1/auth/login` | Create an account or sign in, setting the session cookies. |
+| `POST /v1/auth/refresh`, `POST /v1/auth/logout` | Issue a new access token from the refresh cookie, or end the session. |
+| `GET /v1/auth/me` | The signed-in user. |
+| `POST /v1/endpoints` | Build an endpoint from `url` and `description`. |
+| `GET /v1/endpoints`, `GET /v1/endpoints/{id}` | List your endpoints, or get one with its schema. |
+| `GET /v1/endpoints/{id}/data` | Fetch the page now and return the extracted data. |
+| `DELETE /v1/endpoints/{id}` | Delete an endpoint. |
+| `GET /v1/api-keys`, `POST /v1/api-keys`, `DELETE /v1/api-keys/{id}` | Manage API keys, from a browser session only. |
+
 ## Architecture
+
+```mermaid
+flowchart LR
+    subgraph create["POST /v1/endpoints"]
+        A[Fetch page] --> B[Clean HTML] --> C[LLM writes plan] --> D[Validate selectors] --> E[(Save recipe)]
+    end
+    subgraph call["GET /v1/endpoints/{id}/data"]
+        F[(Load recipe)] --> G[Fetch page] --> H[Clean HTML] --> I[Run selectors] --> J[Typed JSON]
+    end
+```
+
+### Building an endpoint
+
+1. **Fetch.** The page is downloaded through an httpx transport that checks every connection against private and reserved addresses, described under [Limits and safety](#limits-and-safety).
+2. **Clean.** Scripts, styles, SVGs, iframes, comments, inline styles and event handlers are stripped, leaving the content markup, which is then capped at 80,000 characters for the model.
+3. **Plan.** The model gets the cleaned HTML and the user's description, and returns a plan through structured output, parsed straight into a Pydantic model.
+   The plan holds the extraction schema, plus a snake_case name and a description for the endpoint.
+4. **Validate.** Field names must be unique, every selector must be valid CSS, and every field must match at least one element on the fetched page.
+   A plan that fails is rejected with a plain-language error rather than saved broken.
+5. **Save.** The extraction schema is stored in a PostgreSQL JSONB column on the user's endpoint.
+
+A saved recipe looks like this:
+
+```json
+{
+  "item_selector": "tr.athing",
+  "fields": [
+    { "name": "title", "selector": ".titleline > a", "type": "string", "source": { "kind": "text" } },
+    { "name": "url", "selector": ".titleline > a", "type": "string", "source": { "kind": "attribute", "name": "href" } },
+    { "name": "points", "selector": ".score", "relative_to": "next_sibling", "type": "integer", "source": { "kind": "text" } }
+  ]
+}
+```
+
+With an `item_selector`, the endpoint returns a list with one record per matching element, and field selectors run inside each one.
+Without it, the endpoint returns a single object and field selectors run against the whole page.
+`relative_to: "next_sibling"` covers layouts like Hacker News, where one record is spread over two sibling rows.
+
+### Calling an endpoint
+
+The data route loads the recipe, fetches and cleans the live page, and runs the selectors with BeautifulSoup.
+Each value is read from the element's text or an attribute, then coerced to the field's type, so `"1,204 points"` becomes `1204`.
+The model is never called here, which keeps each call to a single page fetch plus parsing.
+
+### Design decisions
+
+- **The LLM runs once per endpoint, not once per request.** Selectors are generated up front and reused, which makes calls fast, cheap and repeatable, and keeps the model's output reviewable as plain data.
+- **HTML parsing runs in worker processes.** Parsing a large page takes seconds of pure-Python CPU work, which would stall every other request on the event loop, and threads do not help while the parser holds the GIL.
+  Argon2 hashing is kept off the event loop too.
+- **Database connections are released before slow work.** Requests commit before fetching a page or calling the model, so a slow site cannot drain the connection pool.
+- **Every failure has a status and a message.** Services translate fetch, model and validation failures into typed application errors with their own HTTP status, and log the technical cause separately.
+- **Ownership is enforced in queries.** Every read, update and delete is scoped by user, and another user's endpoint returns 404 rather than 403, so ids cannot be probed.
+
+### Project layout
+
+```
+backend/
+  app/
+    api/routes/   HTTP handlers for auth, endpoints and API keys
+    schemas/      Pydantic request, response and extraction models
+    services/     Fetching, cleaning, planning, validation and extraction
+    core/         Config, SSRF-safe HTTP, rate limiting, security, errors
+    models/       SQLAlchemy models
+  migrations/     Alembic migrations
+  tests/          pytest suite
+frontend/
+  src/
+    app/          Router, providers, theme and route components
+    features/     auth, endpoint and api-keys, each with its api hooks and components
+    components/   Shared UI
+    lib/          axios client, session handling and query client
+```
+
+The frontend follows the [bulletproof-react](https://github.com/alan2207/bulletproof-react) layout.
+Each API call is paired with a zod schema that parses its response and a TanStack Query hook, and form validation reuses the same schemas.
+A 401 triggers one token refresh and a replay of the request, and a 401 after that ends the session.
 
 ## Limits and safety
 
@@ -164,3 +326,7 @@ If Redis refuses connections or takes over half a second to answer, requests are
 
 Each error's `detail` says what went wrong in plain language, and the app shows it as is.
 The technical cause, such as a provider error or the selectors that missed, goes to the server log instead.
+
+## License
+
+[MIT](LICENSE)
